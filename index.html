@@ -28,7 +28,7 @@
   <!-- Ícono de la pestaña: un disco -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%BF%3C/text%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Special+Elite&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%);
@@ -48,6 +48,22 @@
       color: #1e293b;
       transition: background 0.5s ease;
       overflow-x: hidden;
+    }
+
+    /* Firma con letra de máquina de escribir vieja */
+    .signature {
+      position: fixed;
+      right: 14px;
+      bottom: 10px;
+      z-index: 40;
+      font-family: 'Special Elite', 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      color: hsl(100, 10%, 38%);
+      opacity: 0.85;
+      pointer-events: none;
+      user-select: none;
+      transition: color 0.5s ease, text-shadow 0.5s ease;
     }
 
     .mono {
@@ -240,7 +256,10 @@
 <body class="p-6 md:p-12">
 
   <!-- Notificación flotante -->
-  <div id="syncToast" class="fixed bottom-5 right-5 z-50 hidden glass-pill px-4 py-2.5 rounded-2xl text-xs font-medium text-slate-800 shadow-lg items-center gap-2">
+  <!-- Firma -->
+  <div id="signature" class="signature" aria-label="Firma: Pochincho">Pochincho</div>
+
+  <div id="syncToast" class="fixed bottom-10 right-5 z-50 hidden glass-pill px-4 py-2.5 rounded-2xl text-xs font-medium text-slate-800 shadow-lg items-center gap-2">
     <span id="syncToastDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
     <span id="syncToastText">Sincronizado con GitHub</span>
   </div>
@@ -1230,6 +1249,40 @@
 
     function setPageBg(css) {
       document.documentElement.style.setProperty("--bg-gradient", css);
+      updateSignatureColor(css);
+    }
+
+    // Brillo promedio (0 = negro, 1 = blanco) de los colores que usa el fondo
+    function estimateBgLuminance(css) {
+      const colors = [];
+      (css.match(/#[0-9a-f]{3,8}\b/gi) || []).forEach(hex => {
+        let h = hex.slice(1);
+        if (h.length === 3 || h.length === 4) h = h.slice(0, 3).split("").map(c => c + c).join("");
+        colors.push([parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]);
+      });
+      (css.match(/rgba?\([^)]*\)/gi) || []).forEach(fn => {
+        const n = fn.match(/[\d.]+/g).map(Number);
+        if (n.length >= 3 && (n[3] === undefined || n[3] > 0.3)) colors.push(n.slice(0, 3));
+      });
+      if (colors.length === 0) return 0.9;
+      const lum = colors.map(([r, g, b]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255);
+      return lum.reduce((a, b) => a + b, 0) / lum.length;
+    }
+
+    // Gris verdoso: más oscuro sobre fondos claros, más claro sobre fondos oscuros
+    function updateSignatureColor(css) {
+      const sig = document.getElementById("signature");
+      if (!sig) return;
+      const lum = estimateBgLuminance(css);
+      if (lum > 0.55) {
+        const lightness = Math.round(44 - (lum - 0.55) * 30);      // 44% → ~30%
+        sig.style.color = `hsl(100, 12%, ${lightness}%)`;
+        sig.style.textShadow = "0 1px 0 rgba(255,255,255,0.45)";
+      } else {
+        const lightness = Math.round(66 + (0.55 - lum) * 30);      // 66% → ~82%
+        sig.style.color = `hsl(100, 14%, ${lightness}%)`;
+        sig.style.textShadow = "0 1px 2px rgba(0,0,0,0.55)";
+      }
     }
 
     function getVisitorChoice() {
