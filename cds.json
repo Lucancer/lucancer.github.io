@@ -72,6 +72,34 @@
   ],
   "cds": [
     {
+      "id": "cd-1792241739176-2ij5c",
+      "title": "Awesome Privacy",
+      "category": "Reddit",
+      "url": "https://github.com/pluja/awesome-privacy",
+      "img": "https://i.imgur.com/VONS2mE.jpeg",
+      "desc": "Seguridad",
+      "keywords": [
+        "reddit",
+        "web",
+        "Red",
+        "aplicaciones"
+      ],
+      "design": {
+        "c1": "#000000",
+        "c2": "#de292e",
+        "c3": "#000000",
+        "pattern": "grain",
+        "scale": 75,
+        "opacity": 90,
+        "colorCount": 3,
+        "patternColor": "#000000",
+        "rotation": 0,
+        "randomness": 0,
+        "seed": 998817,
+        "textColor": "#fef08a"
+      }
+    },
+    {
       "id": "cd-1792241400493-wlmbi",
       "title": "URL",
       "category": "Scan",
