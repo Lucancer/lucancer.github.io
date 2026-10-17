@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WhitoSnako · Estantería de CDs</title>
-  <meta name="description" content="WhitoSnako: mi estantería de CDs con mis páginas favoritas. También podés organizar tus propios CDs en WhitoSnako, con una gran variedad de opciones de personalización y organización. />
+  <meta name="description" content="WhitoSnako: mi estantería de CDs con mis páginas favoritas. También podés organizar tus propios CDs en WhitoSnako, con una gran variedad de opciones de personalización y organización." />
   <meta name="author" content="Lucancer" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#1e1b4b" />
@@ -321,8 +321,35 @@
     }
 
     /* CELULAR: el disco sale menos para que entre todo en la pantalla */
+    /* Los campos de texto tienen que poder seleccionarse (en iPhone, con user-select: none
+       a veces no se puede escribir en ellos) */
+    input, textarea, select {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* Mientras la ventana de crear/editar CD está abierta, la página de atrás no se mueve */
+    body.modal-open {
+      overflow: hidden;
+    }
+
     @media (max-width: 640px) {
       :root { --disc-slide: 55px; }
+      /* En iPhone, si un campo tiene letra de menos de 16px, el celular hace zoom al tocarlo
+         y la ventana queda cortada. Con 16px no hace zoom. */
+      #cdModal input[type="text"],
+      #cdModal input[type="url"],
+      #cdModal select {
+        font-size: 16px;
+      }
+      /* Botones de la ventana del CD más grandes para el dedo */
+      #cdModal button[type="submit"],
+      #cancelModalBtn {
+        flex: 1;
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-size: 14px;
+      }
       /* Mientras se busca, la barra de búsqueda usa el lugar de los otros botones */
       .search-expand.open { width: calc(100vw - 170px); }
       #topBar.search-open #topBarRow > :not(:first-child) { display: none; }
@@ -346,7 +373,7 @@
   <div id="signature" class="signature" aria-label="Firma: Pochincho">Pochincho</div>
 
   <!-- Avisos (máximo 3): el más nuevo abajo, los anteriores suben y se difuminan -->
-  <div id="toastStack" class="fixed bottom-10 right-5 z-50 flex flex-col items-end gap-2 pointer-events-none" aria-live="polite"></div>
+  <div id="toastStack" class="fixed bottom-10 right-5 z-[70] flex flex-col items-end gap-2 pointer-events-none" aria-live="polite"></div>
 
   <!-- BOTÓN DISCO (arriba a la izquierda): cambia entre la Estantería de Pochincho y "Mi estantería" -->
   <div class="fixed top-5 left-5 z-50">
@@ -668,8 +695,10 @@
   </main>
 
   <!-- MODAL CREAR / EDITAR CD -->
-  <div id="cdModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="bg-[#FDFBF7] border border-slate-200/90 rounded-3xl max-w-3xl w-full p-6 md:p-7 shadow-2xl my-8">
+  <!-- items-start + m-auto: si la ventana es más alta que la pantalla (celular), se puede
+       scrollear desde arriba; si entra, queda centrada igual que antes -->
+  <div id="cdModal" class="fixed inset-0 z-[60] hidden items-start justify-center bg-slate-900/40 backdrop-blur-sm p-2 sm:p-8 overflow-y-auto overscroll-contain">
+    <div class="bg-[#FDFBF7] border border-slate-200/90 rounded-2xl sm:rounded-3xl max-w-3xl w-full p-4 sm:p-6 md:p-7 shadow-2xl m-auto">
       <div class="flex items-center justify-between pb-4 border-b border-slate-200">
         <div>
           <h2 id="modalTitle" class="text-lg font-bold text-slate-800">Personalizar CD y Caja</h2>
@@ -2166,6 +2195,11 @@
         );
       });
 
+      // Orden alfabético A–Z por título (ignora mayúsculas y tildes; "CD 2" va antes que "CD 10")
+      filtered.sort((a, b) =>
+        (a.title || "").trim().localeCompare((b.title || "").trim(), "es", { sensitivity: "base", numeric: true })
+      );
+
       document.getElementById("resultsCounter").textContent = `${filtered.length} CD${filtered.length === 1 ? "" : "s"}`;
 
       if (filtered.length === 0) {
@@ -2930,6 +2964,7 @@
       currentModalSeed = newPatternSeed();
       updateLiveBoxPreview();
       document.getElementById("cdModal").classList.replace("hidden", "flex");
+      document.body.classList.add("modal-open");
     }
 
     function openEditCdModal(id) {
@@ -2960,10 +2995,12 @@
       currentModalTextColor = item.design?.textColor || "#ffffff";
       updateLiveBoxPreview();
       document.getElementById("cdModal").classList.replace("hidden", "flex");
+      document.body.classList.add("modal-open");
     }
 
     function closeCdModal() {
       document.getElementById("cdModal").classList.replace("flex", "hidden");
+      document.body.classList.remove("modal-open");
     }
 
     function deleteCd(id) {
