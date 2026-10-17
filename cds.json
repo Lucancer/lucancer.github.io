@@ -72,6 +72,36 @@
   ],
   "cds": [
     {
+      "id": "cd-1792236895229-5xjxd",
+      "title": "Massgravee",
+      "category": "Activador",
+      "url": "https://massgrave.dev",
+      "img": "https://imgur.com/gallery/windows-fifW8Lb#0LeQC8U",
+      "desc": "Windows",
+      "keywords": [
+        "windows",
+        "key",
+        "crack",
+        "activar",
+        "mass",
+        "Web"
+      ],
+      "design": {
+        "c1": "#00c400",
+        "c2": "#59e1ec",
+        "c3": "#ffffff",
+        "pattern": "bokeh",
+        "scale": 31,
+        "opacity": 90,
+        "colorCount": 3,
+        "patternColor": "",
+        "rotation": 0,
+        "randomness": 54,
+        "seed": 372725,
+        "textColor": "#fef08a"
+      }
+    },
+    {
       "id": "cd-1792236174290-qfdjj",
       "title": "Bypass",
       "category": "Links",
