@@ -107,7 +107,8 @@
         "Mail",
         "Temporal",
         "URL",
-        "Anti"
+        "Anti",
+        "Herramienta"
       ],
       "design": {
         "c1": "#4e8c4a",
