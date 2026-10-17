@@ -70,31 +70,5 @@
   "hiddenBgs": [
     "vapor-sunset"
   ],
-  "cds": [
-    {
-      "id": "cd-1792221942853",
-      "title": "Proyecto Aura",
-      "category": "Proyecto",
-      "url": "https://farmeo-de-aura.netlify.app/",
-      "img": "",
-      "desc": "AURA",
-      "keywords": [
-        "Web"
-      ],
-      "design": {
-        "c1": "#ffc06c",
-        "c2": "#feb723",
-        "c3": "#e69348",
-        "pattern": "honeycomb",
-        "scale": 50,
-        "opacity": 50,
-        "colorCount": 3,
-        "patternColor": "#ffffff",
-        "rotation": 0,
-        "randomness": 0,
-        "seed": 387491,
-        "textColor": "#0f172a"
-      }
-    }
-  ]
+  "cds": []
 }
