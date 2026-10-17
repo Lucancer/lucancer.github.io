@@ -46,7 +46,10 @@
       "name": "Japonés"
     }
   ],
-  "presetCats": {},
+  "presetCats": {
+    "toxic-neon": "cyber",
+    "hologram": "retro"
+  },
   "customBgs": [
     {
       "id": "bg-1792223580574",
@@ -68,7 +71,8 @@
     }
   ],
   "hiddenBgs": [
-    "vapor-sunset"
+    "vapor-sunset",
+    "night-city"
   ],
   "cds": [
     {
