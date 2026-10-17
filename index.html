@@ -490,7 +490,7 @@
       <div id="lockLoginView">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-semibold text-slate-700">Modo Admin</span>
-          <span class="text-[10px] mono text-slate-400">¡WHITESNAKE!</span>
+          <span class="text-[10px] mono text-slate-400">¡WHITOSNAKO!</span>
         </div>
         <form id="unlockForm" class="flex items-center gap-1.5">
           <input
@@ -741,18 +741,28 @@
         <!-- DISEÑO DE LA CAJA -->
         <div class="md:col-span-5 flex flex-col justify-between bg-white/80 border border-slate-200/90 rounded-2xl p-4 space-y-3">
           <div class="space-y-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-600 block">Diseño de Caja (3 Colores + Patrón)</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-600 block">Diseño de Caja (Colores + Patrón)</span>
 
-            <div class="grid grid-cols-3 gap-2">
+            <!-- Cuántos colores usa la tapa -->
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold text-slate-600">Colores de la tapa</span>
+              <div class="flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-semibold" role="group" aria-label="Cantidad de colores">
+                <button type="button" data-colorcount="1" class="color-count-btn px-3 py-0.5 rounded-md transition">1</button>
+                <button type="button" data-colorcount="2" class="color-count-btn px-3 py-0.5 rounded-md transition">2</button>
+                <button type="button" data-colorcount="3" class="color-count-btn px-3 py-0.5 rounded-md transition">3</button>
+              </div>
+            </div>
+
+            <div id="boxColorsGrid" class="grid grid-cols-3 gap-2">
               <label class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
                 Color 1
                 <input type="color" id="boxColor1" value="#1e1b4b" class="w-full h-7 mt-1 cursor-pointer bg-transparent border-0" />
               </label>
-              <label class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <label id="boxColor2Label" class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
                 Color 2
                 <input type="color" id="boxColor2" value="#4338ca" class="w-full h-7 mt-1 cursor-pointer bg-transparent border-0" />
               </label>
-              <label class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <label id="boxColor3Label" class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
                 Color 3
                 <input type="color" id="boxColor3" value="#ec4899" class="w-full h-7 mt-1 cursor-pointer bg-transparent border-0" />
               </label>
@@ -840,6 +850,15 @@
                   <option value="bubbles">Burbujas</option>
                 </optgroup>
               </select>
+            </div>
+
+            <!-- Color propio para el patrón (opcional) -->
+            <div id="patternColorRow" class="flex items-center justify-between gap-2 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+              <label class="flex items-center gap-2 text-[11px] font-medium text-slate-600 cursor-pointer">
+                <input type="checkbox" id="patternColorToggle" class="accent-slate-800 cursor-pointer" />
+                Otro color para el patrón
+              </label>
+              <input type="color" id="patternColorInput" value="#ffffff" disabled class="w-10 h-7 cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed" title="Color del patrón" />
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -1657,16 +1676,29 @@
       return d;
     }
 
+    // "#rrggbb" + transparencia → "rgba(...)"
+    function hexToRgba(hex, alpha) {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${Math.min(1, alpha).toFixed(2)})`;
+    }
+
     function generateBoxStyle(design) {
+      // Cantidad de colores de la tapa: 1 (liso), 2 o 3
+      const colorCount = [1, 2, 3].includes(Number(design?.colorCount)) ? Number(design.colorCount) : 3;
       const c1 = design?.c1 || "#1e1b4b";
-      const c2 = design?.c2 || "#4338ca";
-      const c3 = design?.c3 || "#ec4899";
+      const c2 = colorCount >= 2 ? (design?.c2 || "#4338ca") : c1;
+      const baseC3 = colorCount >= 3 ? (design?.c3 || "#ec4899") : c2;
+      // Color propio del patrón (opcional): reemplaza el blanco y el color de acento de las figuras
+      const pc = /^#[0-9a-f]{6}$/i.test(design?.patternColor || "") ? design.patternColor : "";
+      const c3 = pc || baseC3;          // color de acento que usan los patrones
+      const light = pc || "#fff";       // "tinta" clara de las figuras
+      const dark = pc || "#000";        // manchas (cebra, animal print)
       const pattern = design?.pattern || "prism";
       const scale = Number(design?.scale || 50);
       const opacity = Number(design?.opacity || 45) / 100;
-      const baseGrad = `linear-gradient(${Math.round(scale * 3.6)}deg, ${c1} 0%, ${c2} 52%, ${c3} 100%)`;
-      // Blanco / negro semitransparente según la intensidad elegida
-      const w = k => `rgba(255,255,255,${(opacity * k).toFixed(2)})`;
+      const baseGrad = `linear-gradient(${Math.round(scale * 3.6)}deg, ${c1} 0%, ${c2} 52%, ${baseC3} 100%)`;
+      // Tinta clara (blanco o el color del patrón) y sombra negra, semitransparentes según la intensidad
+      const w = k => pc ? hexToRgba(pc, opacity * k) : `rgba(255,255,255,${(opacity * k).toFixed(2)})`;
       const d = k => `rgba(0,0,0,${(opacity * k).toFixed(2)})`;
       // SVG embebido con comillas simples, para no romper el atributo style="..."
       const svgUrl = svg => `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, "%27")}')`;
@@ -1730,12 +1762,12 @@
       const SPARKLE = "M0-10C1-2 2-1 10 0C2 1 1 2 0 10C-1 2-2 1-10 0C-2-1-1-2 0-10Z";
       const SCATTER = {
         hearts: () => [
-          `<path transform='scale(${k}) translate(-12 -12)' d='${HEART}' fill='#fff' fill-opacity='${op(2)}'/>`,
+          `<path transform='scale(${k}) translate(-12 -12)' d='${HEART}' fill='${light}' fill-opacity='${op(2)}'/>`,
           `<path transform='scale(${k * 0.7}) translate(-12 -12)' d='${HEART}' fill='${c3}' fill-opacity='${op(2.2)}'/>`
         ],
         stars: () => [
-          `<path transform='scale(${k * 1.1})' d='${SPARKLE}' fill='#fff' fill-opacity='${op(2)}'/>`,
-          `<path transform='scale(${k * 0.6})' d='${SPARKLE}' fill='#fff' fill-opacity='${op(1.6)}'/>`
+          `<path transform='scale(${k * 1.1})' d='${SPARKLE}' fill='${light}' fill-opacity='${op(2)}'/>`,
+          `<path transform='scale(${k * 0.6})' d='${SPARKLE}' fill='${light}' fill-opacity='${op(1.6)}'/>`
         ],
         bubbles: () => [
           `<circle r='${(cell * 0.3).toFixed(1)}' fill='${w(0.18)}' stroke='${w(0.8)}' stroke-width='1.5'/>`,
@@ -1744,7 +1776,7 @@
         sakura: () => {
           const petals = [0, 72, 144, 216, 288].map(a => `<path transform='rotate(${a})' d='M0 0C-6 -5 -7 -14 -3 -18L0 -15L3 -18C7 -14 6 -5 0 0Z'/>`).join("");
           return [
-            `<g transform='scale(${k * 0.9})' fill='${c3}'>${petals}<circle r='2.6' fill='#fff'/></g>`,
+            `<g transform='scale(${k * 0.9})' fill='${c3}'>${petals}<circle r='2.6' fill='${light}'/></g>`,
             `<path transform='scale(${k})' d='M0 6C-4 2 -4 -4 0 -6C4 -4 4 2 0 6Z' fill='${c3}' fill-opacity='0.8'/>`
           ];
         },
@@ -1752,23 +1784,23 @@
         lightning: () => [`<path transform='scale(${k * 1.2}) translate(-12 -16)' d='M14 2L5 18H11L8 30L19 13H13L17 2Z' fill='${w(1.6)}'/>`],
         memphis: () => [
           `<path transform='scale(${k})' d='M-12 0q4 -6 8 0t8 0t8 0' fill='none' stroke='${c3}' stroke-width='3.5' stroke-linecap='round'/>`,
-          `<path transform='scale(${k})' d='M0 -9l9 15h-18z' fill='none' stroke='#fff' stroke-width='2.5' stroke-opacity='${op(2)}'/>`,
+          `<path transform='scale(${k})' d='M0 -9l9 15h-18z' fill='none' stroke='${light}' stroke-width='2.5' stroke-opacity='${op(2)}'/>`,
           `<circle r='${(7 * k).toFixed(1)}' fill='${c3}' fill-opacity='${op(2)}'/>`,
           `<circle r='${(7 * k).toFixed(1)}' fill='none' stroke='#000' stroke-width='2.5' stroke-opacity='${op(2)}'/>`,
-          `<g fill='#fff' fill-opacity='${op(2)}' transform='scale(${k})'><circle cx='-4' cy='-3' r='1.8'/><circle cx='0' cy='-3' r='1.8'/><circle cx='4' cy='-3' r='1.8'/><circle cx='-4' cy='3' r='1.8'/><circle cx='0' cy='3' r='1.8'/><circle cx='4' cy='3' r='1.8'/></g>`
+          `<g fill='${light}' fill-opacity='${op(2)}' transform='scale(${k})'><circle cx='-4' cy='-3' r='1.8'/><circle cx='0' cy='-3' r='1.8'/><circle cx='4' cy='-3' r='1.8'/><circle cx='-4' cy='3' r='1.8'/><circle cx='0' cy='3' r='1.8'/><circle cx='4' cy='3' r='1.8'/></g>`
         ],
         animal: () => [
-          `<path transform='scale(${k})' d='M-8 -4C-2 -9 7 -4 4 4C1 10 -10 8 -9 0Z' fill='#000' fill-opacity='${op(1)}'/>`,
-          `<circle r='${(5 * k).toFixed(1)}' fill='#000' fill-opacity='${op(1)}'/>`
+          `<path transform='scale(${k})' d='M-8 -4C-2 -9 7 -4 4 4C1 10 -10 8 -9 0Z' fill='${dark}' fill-opacity='${op(1)}'/>`,
+          `<circle r='${(5 * k).toFixed(1)}' fill='${dark}' fill-opacity='${op(1)}'/>`
         ],
         frutiger: () => [
-          `<g><circle r='${(cell * 0.32).toFixed(1)}' fill='url(#b)' stroke='#fff' stroke-opacity='${op(1.4)}'/><ellipse cx='${(-cell * 0.1).toFixed(1)}' cy='${(-cell * 0.14).toFixed(1)}' rx='${(cell * 0.13).toFixed(1)}' ry='${(cell * 0.06).toFixed(1)}' fill='#fff' fill-opacity='${op(1.8)}' transform='rotate(-28)'/></g>`,
-          `<circle r='${(cell * 0.14).toFixed(1)}' fill='url(#b)' stroke='#fff' stroke-opacity='${op(1.4)}'/>`
+          `<g><circle r='${(cell * 0.32).toFixed(1)}' fill='url(#b)' stroke='${light}' stroke-opacity='${op(1.4)}'/><ellipse cx='${(-cell * 0.1).toFixed(1)}' cy='${(-cell * 0.14).toFixed(1)}' rx='${(cell * 0.13).toFixed(1)}' ry='${(cell * 0.06).toFixed(1)}' fill='${light}' fill-opacity='${op(1.8)}' transform='rotate(-28)'/></g>`,
+          `<circle r='${(cell * 0.14).toFixed(1)}' fill='url(#b)' stroke='${light}' stroke-opacity='${op(1.4)}'/>`
         ]
       };
       if (SCATTER[pattern] && (rot || rnd)) {
         if (pattern === "frutiger") {
-          const defs = `<radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='#fff' stop-opacity='${op(2)}'/><stop offset='0.4' stop-color='#fff' stop-opacity='${op(0.5)}'/><stop offset='1' stop-color='#fff' stop-opacity='${op(0.15)}'/></radialGradient>`;
+          const defs = `<radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='${light}' stop-opacity='${op(2)}'/><stop offset='0.4' stop-color='${light}' stop-opacity='${op(0.5)}'/><stop offset='1' stop-color='${light}' stop-opacity='${op(0.15)}'/></radialGradient>`;
           return scatterSheet(SCATTER.frutiger(), cell * 1.5, defs, `linear-gradient(180deg, ${w(1.6)} 0%, ${w(0.6)} 46%, transparent 47%)`);
         }
         return scatterSheet(SCATTER[pattern](), cell);
@@ -1778,7 +1810,7 @@
 
       /* ----- Vaporwave & Frutiger ----- */
       if (pattern === "frutiger") {
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><defs><radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='#fff' stop-opacity='${op(2)}'/><stop offset='0.4' stop-color='#fff' stop-opacity='${op(0.5)}'/><stop offset='1' stop-color='#fff' stop-opacity='${op(0.15)}'/></radialGradient></defs><g fill='url(#b)' stroke='#fff' stroke-opacity='${op(1.4)}' stroke-width='1'><circle cx='30' cy='34' r='18'/><circle cx='92' cy='22' r='8'/><circle cx='86' cy='84' r='24'/><circle cx='22' cy='96' r='7'/></g></svg>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><defs><radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='${light}' stop-opacity='${op(2)}'/><stop offset='0.4' stop-color='${light}' stop-opacity='${op(0.5)}'/><stop offset='1' stop-color='${light}' stop-opacity='${op(0.15)}'/></radialGradient></defs><g fill='url(#b)' stroke='${light}' stroke-opacity='${op(1.4)}' stroke-width='1'><circle cx='30' cy='34' r='18'/><circle cx='92' cy='22' r='8'/><circle cx='86' cy='84' r='24'/><circle cx='22' cy='96' r='7'/></g></svg>`;
         const tile = Math.max(70, Math.round(scale * 2));
         return `background-image: linear-gradient(180deg, ${w(1.6)} 0%, ${w(0.6)} 46%, transparent 47%), ${svgUrl(svg)}, ${baseGrad}; background-size: 100% 100%, ${tile}px ${tile}px, 100% 100%;`;
       }
@@ -1812,7 +1844,7 @@
         for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
             const v = seeded(x * 31 + y * 17);
-            if (v > 0.55) rects += `<rect x='${x * 4}' y='${y * 4}' width='4' height='4' fill='${v > 0.8 ? "#fff" : "#000"}' fill-opacity='${op(v > 0.8 ? 1.1 : 0.8)}'/>`;
+            if (v > 0.55) rects += `<rect x='${x * 4}' y='${y * 4}' width='4' height='4' fill='${v > 0.8 ? light : "#000"}' fill-opacity='${op(v > 0.8 ? 1.1 : 0.8)}'/>`;
           }
         }
         const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' shape-rendering='crispEdges'>${rects}</svg>`;
@@ -1820,18 +1852,18 @@
         return svgPattern(svg, tile) + " image-rendering: pixelated;";
       }
       if (pattern === "memphis") {
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' opacity='${op(2)}'><path d='M8 30 q8 -12 16 0 t16 0 t16 0' fill='none' stroke='${c3}' stroke-width='4' stroke-linecap='round'/><path d='M78 12 l18 30 h-36 z' fill='none' stroke='#fff' stroke-width='3'/><circle cx='30' cy='86' r='12' fill='${c3}'/><circle cx='96' cy='92' r='14' fill='none' stroke='#000' stroke-width='3'/><g fill='#fff'><circle cx='62' cy='64' r='2.5'/><circle cx='70' cy='64' r='2.5'/><circle cx='78' cy='64' r='2.5'/><circle cx='62' cy='72' r='2.5'/><circle cx='70' cy='72' r='2.5'/><circle cx='78' cy='72' r='2.5'/></g><path d='M6 112 l8 -8 l8 8 l8 -8 l8 8' fill='none' stroke='#000' stroke-width='3'/></svg>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' opacity='${op(2)}'><path d='M8 30 q8 -12 16 0 t16 0 t16 0' fill='none' stroke='${c3}' stroke-width='4' stroke-linecap='round'/><path d='M78 12 l18 30 h-36 z' fill='none' stroke='${light}' stroke-width='3'/><circle cx='30' cy='86' r='12' fill='${c3}'/><circle cx='96' cy='92' r='14' fill='none' stroke='#000' stroke-width='3'/><g fill='${light}'><circle cx='62' cy='64' r='2.5'/><circle cx='70' cy='64' r='2.5'/><circle cx='78' cy='64' r='2.5'/><circle cx='62' cy='72' r='2.5'/><circle cx='70' cy='72' r='2.5'/><circle cx='78' cy='72' r='2.5'/></g><path d='M6 112 l8 -8 l8 8 l8 -8 l8 8' fill='none' stroke='#000' stroke-width='3'/></svg>`;
         const tile = Math.max(80, Math.round(scale * 2.2));
         return svgPattern(svg, tile);
       }
       if (pattern === "hearts") {
         const heart = (x, y, s, fill) => `<path transform='translate(${x} ${y}) scale(${s})' d='M10 18 C3 13 0 9 2 5 C4 1 9 1 10 5 C11 1 16 1 18 5 C20 9 17 13 10 18 Z' fill='${fill}'/>`;
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' opacity='${op(2)}'>${heart(6, 8, 1.1, "#fff")}${heart(46, 4, 0.7, c3)}${heart(36, 42, 1.4, c3)}${heart(8, 56, 0.6, "#fff")}${heart(64, 60, 0.8, "#fff")}</svg>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' opacity='${op(2)}'>${heart(6, 8, 1.1, light)}${heart(46, 4, 0.7, c3)}${heart(36, 42, 1.4, c3)}${heart(8, 56, 0.6, light)}${heart(64, 60, 0.8, light)}</svg>`;
         const tile = Math.max(50, Math.round(scale * 1.4));
         return svgPattern(svg, tile);
       }
       if (pattern === "zebra") {
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='#000' fill-opacity='${op(1.8)}'><path d='M0 10 C30 0 50 26 80 14 S120 18 120 18 V30 C90 36 70 20 40 30 S0 26 0 26 Z'/><path d='M0 52 C24 44 46 64 76 54 S120 60 120 60 V70 C96 76 72 62 46 72 S0 66 0 66 Z'/><path d='M0 92 C30 86 52 104 82 94 S120 98 120 98 V110 C92 118 66 100 38 110 S0 106 0 106 Z'/></svg>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='${dark}' fill-opacity='${op(1.8)}'><path d='M0 10 C30 0 50 26 80 14 S120 18 120 18 V30 C90 36 70 20 40 30 S0 26 0 26 Z'/><path d='M0 52 C24 44 46 64 76 54 S120 60 120 60 V70 C96 76 72 62 46 72 S0 66 0 66 Z'/><path d='M0 92 C30 86 52 104 82 94 S120 98 120 98 V110 C92 118 66 100 38 110 S0 106 0 106 Z'/></svg>`;
         const tile = Math.max(70, Math.round(scale * 2));
         return svgPattern(svg, tile);
       }
@@ -1856,7 +1888,7 @@
           const h = 30 + seeded(i + 3) * 120;
           return `<rect x='${8 + i * 15}' y='${245 - h}' width='10' height='${h.toFixed(0)}' rx='2' fill='url(#e)'/>`;
         }).join("");
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='245' viewBox='0 0 280 245' preserveAspectRatio='none'><defs><linearGradient id='e' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='${c3}' stop-opacity='${op(2)}'/><stop offset='1' stop-color='#fff' stop-opacity='${op(1.2)}'/></linearGradient></defs>${bars}</svg>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='245' viewBox='0 0 280 245' preserveAspectRatio='none'><defs><linearGradient id='e' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='${c3}' stop-opacity='${op(2)}'/><stop offset='1' stop-color='${light}' stop-opacity='${op(1.2)}'/></linearGradient></defs>${bars}</svg>`;
         return svgCover(svg);
       }
       if (pattern === "topo") {
@@ -1882,7 +1914,7 @@
       /* ----- Edgy ----- */
       if (pattern === "hazard") {
         const s = Math.max(10, Math.round(scale / 2.5));
-        return `background: repeating-linear-gradient(${-45 + rot}deg, ${d(2)} 0 ${s}px, transparent ${s}px ${s * 2}px), ${baseGrad};`;
+        return `background: repeating-linear-gradient(${-45 + rot}deg, ${pc ? w(2) : d(2)} 0 ${s}px, transparent ${s}px ${s * 2}px), ${baseGrad};`;
       }
       if (pattern === "diamondplate") {
         const svg = diamondPlateTile("transparent", w(1.5), d(1.5));
@@ -1903,13 +1935,13 @@
         return `background-image: ${svgUrl(tileSvg)}; background-size: ${tileW}px ${tileW / 2}px;`;
       }
       if (pattern === "asanoha") {
-        const t = asanohaTile("#fff", Math.min(1, opacity * 1.6));
+        const t = asanohaTile(light, Math.min(1, opacity * 1.6));
         const tileW = Math.max(30, Math.round(scale * 1.1));
         return svgPattern(t.svg, tileW, Math.round(tileW * t.h / t.w));
       }
       if (pattern === "sakura") {
         const tile = Math.max(70, Math.round(scale * 2));
-        return `background-image: ${svgUrl(sakuraTile(c3, "#fff"))}, ${baseGrad}; background-size: ${tile}px ${tile}px, 100% 100%;`;
+        return `background-image: ${svgUrl(sakuraTile(c3, light))}, ${baseGrad}; background-size: ${tile}px ${tile}px, 100% 100%;`;
       }
 
       /* ----- Rojo y Negro / Rock ----- */
@@ -1934,7 +1966,9 @@
       }
       if (pattern === "grain") {
         const freq = (0.5 + (100 - scale) / 80).toFixed(2);
-        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 ${(opacity * 1.6).toFixed(2)} 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+        const pcn = pc ? parseInt(pc.slice(1), 16) : 0xFFFFFF;
+        const grainRgb = [(pcn >> 16) & 255, (pcn >> 8) & 255, pcn & 255].map(v => (v / 255).toFixed(2));
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${grainRgb[0]} 0 0 0 0 ${grainRgb[1]} 0 0 0 0 ${grainRgb[2]} 0 0 0 ${(opacity * 1.6).toFixed(2)} 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
         return svgPattern(svg, 160);
       }
       if (pattern === "snake") {
@@ -1966,7 +2000,7 @@
       }
       if (pattern === "scanlines") {
         const gap = Math.max(3, Math.round(scale / 12));
-        return `background: repeating-linear-gradient(0deg, ${d(0.6)} 0 1px, transparent 1px ${gap}px), radial-gradient(ellipse at center, transparent 50%, ${d(0.9)} 100%), ${baseGrad};`;
+        return `background: repeating-linear-gradient(0deg, ${pc ? w(0.6) : d(0.6)} 0 1px, transparent 1px ${gap}px), radial-gradient(ellipse at center, transparent 50%, ${d(0.9)} 100%), ${baseGrad};`;
       }
       if (pattern === "stripes") {
         const size = Math.max(10, Math.round(scale / 2.5));
@@ -2002,32 +2036,32 @@
         return svgPattern(svg, tile);
       }
       if (pattern === "prism") {
-        return `background: conic-gradient(from ${scale * 2}deg at 75% 30%, rgba(255,255,255,${(opacity * 0.65).toFixed(2)}) 0deg, transparent 45deg, rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 110deg, transparent 180deg, rgba(255,255,255,${(opacity * 0.65).toFixed(2)}) 250deg, transparent 360deg), ${baseGrad};`;
+        return `background: conic-gradient(from ${scale * 2}deg at 75% 30%, ${w(0.65)} 0deg, transparent 45deg, ${w(0.5)} 110deg, transparent 180deg, ${w(0.65)} 250deg, transparent 360deg), ${baseGrad};`;
       }
       if (pattern === "circles") {
         const ringSize = Math.max(8, Math.round(scale / 3));
-        return `background: repeating-radial-gradient(circle at 80% 50%, rgba(255,255,255,${(opacity * 0.55).toFixed(2)}) 0px, rgba(255,255,255,${(opacity * 0.55).toFixed(2)}) 2px, transparent 2px, transparent ${ringSize}px), ${baseGrad};`;
+        return `background: repeating-radial-gradient(circle at 80% 50%, ${w(0.55)} 0px, ${w(0.55)} 2px, transparent 2px, transparent ${ringSize}px), ${baseGrad};`;
       }
       if (pattern === "cyber") {
         const cellSize = Math.max(12, Math.round(scale / 2));
-        return `background-image: linear-gradient(rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 1px, transparent 1px), ${baseGrad}; background-size: ${cellSize}px ${cellSize}px, ${cellSize}px ${cellSize}px, 100% 100%;`;
+        return `background-image: linear-gradient(${w(0.5)} 1px, transparent 1px), linear-gradient(90deg, ${w(0.5)} 1px, transparent 1px), ${baseGrad}; background-size: ${cellSize}px ${cellSize}px, ${cellSize}px ${cellSize}px, 100% 100%;`;
       }
       if (pattern === "halftone") {
         const dotSpace = Math.max(8, Math.round(scale / 3.2));
-        return `background-image: radial-gradient(rgba(255,255,255,${(opacity * 0.7).toFixed(2)}) 22%, transparent 24%), ${baseGrad}; background-size: ${dotSpace}px ${dotSpace}px, 100% 100%;`;
+        return `background-image: radial-gradient(${w(0.7)} 22%, transparent 24%), ${baseGrad}; background-size: ${dotSpace}px ${dotSpace}px, 100% 100%;`;
       }
       if (pattern === "matrix") {
-        const svgMatrix = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><style>text{font-family:monospace;font-weight:bold;font-size:10px;fill:rgba(167,243,208,${opacity});}</style><text x='4' y='12'>1 0 1 A</text><text x='18' y='26'>0 F 9 1</text><text x='6' y='40'>X 7 0 C</text><text x='24' y='54'>1 1 0 Z</text></svg>`;
+        const svgMatrix = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><style>text{font-family:monospace;font-weight:bold;font-size:10px;fill:${pc ? hexToRgba(pc, opacity) : `rgba(167,243,208,${opacity})`};}</style><text x='4' y='12'>1 0 1 A</text><text x='18' y='26'>0 F 9 1</text><text x='6' y='40'>X 7 0 C</text><text x='24' y='54'>1 1 0 Z</text></svg>`;
         const tile = Math.max(38, Math.round(scale * 1.1));
         return svgPattern(svgMatrix, tile);
       }
       if (pattern === "animal") {
-        const svgAnimal = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='rgba(0,0,0,${opacity})'><path d='M18,14 C26,10 34,18 28,26 C22,33 11,29 12,20 Z'/><path d='M56,18 C65,15 71,25 64,32 C57,38 46,32 49,23 Z'/><path d='M32,48 C43,43 51,54 44,63 C36,70 23,64 26,53 Z'/><circle cx='16' cy='58' r='6'/><circle cx='65' cy='60' r='7'/></g></svg>`;
+        const svgAnimal = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='${pc ? hexToRgba(pc, opacity) : `rgba(0,0,0,${opacity})`}'><path d='M18,14 C26,10 34,18 28,26 C22,33 11,29 12,20 Z'/><path d='M56,18 C65,15 71,25 64,32 C57,38 46,32 49,23 Z'/><path d='M32,48 C43,43 51,54 44,63 C36,70 23,64 26,53 Z'/><circle cx='16' cy='58' r='6'/><circle cx='65' cy='60' r='7'/></g></svg>`;
         const tile = Math.max(44, Math.round(scale * 1.3));
         return svgPattern(svgAnimal, tile);
       }
       if (pattern === "waves") {
-        const svgWave = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><path d='M0 20 Q 25 5, 50 20 T 100 20' fill='none' stroke='rgba(255,255,255,${opacity})' stroke-width='2.5'/></svg>`;
+        const svgWave = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><path d='M0 20 Q 25 5, 50 20 T 100 20' fill='none' stroke='${w(1)}' stroke-width='2.5'/></svg>`;
         const tileW = Math.max(50, Math.round(scale * 1.5));
         return svgPattern(svgWave, tileW, Math.round(tileW * 0.45));
       }
@@ -2104,9 +2138,14 @@
         const trackNum = String(idx + 1).padStart(2, "0");
         const boxStyle = generateBoxStyle(cd.design);
         const textColor = cd.design?.textColor || "#ffffff";
+        // Disco sin imagen: se pinta con los colores de la tapa (respetando si usa 1, 2 o 3)
+        const count = Number(cd.design?.colorCount) || 3;
+        const dc1 = cd.design?.c1 || "#334155";
+        const dc2 = count >= 2 ? (cd.design?.c2 || "#6366f1") : dc1;
+        const dc3 = count >= 3 ? (cd.design?.c3 || "#ec4899") : dc2;
         const discImg = cd.img && cd.img.trim()
           ? `background-image: url('${cd.img.replace(/'/g, "\\'")}');`
-          : `background: conic-gradient(from 0deg, ${cd.design?.c1 || "#334155"}, ${cd.design?.c2 || "#6366f1"}, ${cd.design?.c3 || "#ec4899"}, ${cd.design?.c1 || "#334155"});`;
+          : `background: conic-gradient(from 0deg, ${dc1}, ${dc2}, ${dc3}, ${dc1});`;
 
         return `
           <div class="cd-item-wrapper group">
@@ -2735,6 +2774,31 @@
     const ROTATABLE_PATTERNS = [...RANDOMIZABLE_PATTERNS, "snake", "zigzag", "triangles", "matrix", "waves", "pixel", "zebra",
       "circuit", "honeycomb", "topo", "diamondplate", "asanoha", "seigaiha", "stripes", "hazard", "plaid"];
     let currentModalSeed = 1;
+    let currentColorCount = 3;
+
+    // Cantidad de colores de la tapa: marca el botón elegido y oculta los colores que no se usan
+    function setColorCount(n) {
+      currentColorCount = [1, 2, 3].includes(Number(n)) ? Number(n) : 3;
+      document.querySelectorAll(".color-count-btn").forEach(btn => {
+        const active = Number(btn.dataset.colorcount) === currentColorCount;
+        btn.className = `color-count-btn px-3 py-0.5 rounded-md transition ${active ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"}`;
+      });
+      document.getElementById("boxColor2Label").classList.toggle("hidden", currentColorCount < 2);
+      document.getElementById("boxColor3Label").classList.toggle("hidden", currentColorCount < 3);
+      document.getElementById("boxColorsGrid").style.gridTemplateColumns = `repeat(${currentColorCount}, minmax(0, 1fr))`;
+    }
+
+    function getModalPatternColor() {
+      return document.getElementById("patternColorToggle").checked ? document.getElementById("patternColorInput").value : "";
+    }
+
+    function setModalPatternColor(color) {
+      const toggle = document.getElementById("patternColorToggle");
+      const input = document.getElementById("patternColorInput");
+      toggle.checked = Boolean(color);
+      input.disabled = !color;
+      if (color) input.value = color;
+    }
 
     function newPatternSeed() {
       return 1 + Math.floor(Math.random() * 999998);
@@ -2747,6 +2811,8 @@
       document.getElementById("rotationControl").classList.toggle("hidden", !canRotate);
       document.getElementById("randomControl").classList.toggle("hidden", !canRandom);
       document.getElementById("patternExtraControls").classList.toggle("hidden", !canRotate && !canRandom);
+      // "Degradado Puro" no tiene patrón, así que no tiene sentido elegir su color
+      document.getElementById("patternColorRow").classList.toggle("hidden", pattern === "smooth");
     }
 
     function updateLiveBoxPreview() {
@@ -2767,7 +2833,7 @@
       updatePatternControls(pattern);
 
       const previewEl = document.getElementById("liveBoxPreview");
-      previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, pattern, scale, opacity, rotation, randomness, seed: currentModalSeed })} color: ${currentModalTextColor};`);
+      previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, colorCount: currentColorCount, patternColor: getModalPatternColor(), pattern, scale, opacity, rotation, randomness, seed: currentModalSeed })} color: ${currentModalTextColor};`);
       document.querySelector("#livePreviewText p:last-child").textContent = title;
 
       const imgVal = document.getElementById("cdImgInput").value.trim();
@@ -2836,6 +2902,8 @@
       document.getElementById("boxPatternSelect").value = item.design?.pattern || "prism";
       document.getElementById("boxPatternScale").value = item.design?.scale ?? 50;
       document.getElementById("boxPatternOpacity").value = item.design?.opacity ?? 45;
+      setColorCount(item.design?.colorCount ?? 3);
+      setModalPatternColor(item.design?.patternColor || "");
       document.getElementById("boxPatternRotation").value = item.design?.rotation ?? 0;
       document.getElementById("boxPatternRandom").value = item.design?.randomness ?? 0;
       currentModalSeed = item.design?.seed || newPatternSeed();
@@ -2957,6 +3025,8 @@
           pattern: patterns.includes(d.pattern) ? d.pattern : "prism",
           scale: clampNum(d.scale, 15, 100, 50),
           opacity: clampNum(d.opacity, 10, 90, 45),
+          colorCount: Math.round(clampNum(d.colorCount, 1, 3, 3)),
+          patternColor: HEX_COLOR.test(d.patternColor || "") ? d.patternColor : "",
           rotation: clampNum(d.rotation, 0, 360, 0),
           randomness: clampNum(d.randomness, 0, 100, 0),
           seed: Math.round(clampNum(d.seed, 1, 999999, 1)),
@@ -3333,6 +3403,22 @@
         btn.addEventListener("click", () => addModalKeywordFromStr(btn.dataset.quicktag));
       });
 
+      // Cantidad de colores (1, 2 o 3)
+      document.querySelectorAll(".color-count-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          setColorCount(btn.dataset.colorcount);
+          updateLiveBoxPreview();
+        });
+      });
+      setColorCount(3);
+
+      // Color propio del patrón
+      document.getElementById("patternColorToggle").addEventListener("change", e => {
+        document.getElementById("patternColorInput").disabled = !e.target.checked;
+        updateLiveBoxPreview();
+      });
+      document.getElementById("patternColorInput").addEventListener("input", updateLiveBoxPreview);
+
       // 🎲: otra combinación al azar (si la aleatoriedad estaba en 0, la sube a 50%)
       document.getElementById("reshuffleBtn").addEventListener("click", () => {
         currentModalSeed = newPatternSeed();
@@ -3373,6 +3459,8 @@
             pattern: document.getElementById("boxPatternSelect").value,
             scale: Number(document.getElementById("boxPatternScale").value),
             opacity: Number(document.getElementById("boxPatternOpacity").value),
+            colorCount: currentColorCount,
+            patternColor: getModalPatternColor(),
             rotation: Number(document.getElementById("boxPatternRotation").value),
             randomness: Number(document.getElementById("boxPatternRandom").value),
             seed: currentModalSeed,
