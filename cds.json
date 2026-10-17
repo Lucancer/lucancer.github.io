@@ -76,6 +76,33 @@
   ],
   "cds": [
     {
+      "id": "cd-1792245816558-hqd26",
+      "title": "Int Games",
+      "category": "Juegos",
+      "url": "https://pastebin.com/raw/Pur5tXRD",
+      "img": "https://i.pinimg.com/1200x/8d/20/df/8d20df71b335b42fa7648a698b6931be.jpg",
+      "desc": "Juegos",
+      "keywords": [
+        "Web",
+        "Juego",
+        "URL"
+      ],
+      "design": {
+        "c1": "#ffffff",
+        "c2": "#747474",
+        "c3": "#ffffff",
+        "pattern": "xbox",
+        "scale": 45,
+        "opacity": 90,
+        "colorCount": 3,
+        "patternColor": "#49e051",
+        "rotation": 0,
+        "randomness": 0,
+        "seed": 91747,
+        "textColor": "#ffffff"
+      }
+    },
+    {
       "id": "cd-1792243758646-yfvti",
       "title": "DP Tools",
       "category": "URL",
