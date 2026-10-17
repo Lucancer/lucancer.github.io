@@ -883,4 +883,438 @@
 
       emptyState.classList.add("hidden");
       grid.innerHTML = filtered.map((cd, idx) => {
-        const
+        const trackNum = String(idx + 1).padStart(2, "0");
+        const boxStyle = generateBoxStyle(cd.design);
+        const textColor = cd.design?.textColor || "#ffffff";
+        const discImg = cd.img && cd.img.trim()
+          ? `background-image: url('${cd.img.replace(/'/g, "\\'")}');`
+          : `background: conic-gradient(from 0deg, ${cd.design?.c1 || "#334155"}, ${cd.design?.c2 || "#6366f1"}, ${cd.design?.c3 || "#ec4899"}, ${cd.design?.c1 || "#334155"});`;
+
+        return `
+          <div class="cd-item-wrapper group">
+            <div class="cd-disc-container">
+              <div class="cd-disc" style="${discImg}">
+                <div class="cd-center-ring"><div class="cd-center-hole"></div></div>
+              </div>
+            </div>
+            <div class="jewel-case" style="${boxStyle} color: ${textColor};" onclick="window.open('${cd.url.replace(/'/g, "\\'")}', '_blank', 'noopener,noreferrer')">
+              <div class="jewel-spine">
+                <span class="spine-text mono">${escapeHtml(cd.category || "BOOKMARK")} • CD-${trackNum}</span>
+              </div>
+              <div class="flex-1 p-4 flex flex-col justify-between relative z-10 overflow-hidden">
+                <div class="flex items-start justify-between gap-2">
+                  <span class="mono text-[10px] font-bold tracking-widest px-2 py-0.5 rounded bg-black/25">TRK #${trackNum}</span>
+                  ${isOwnerMode ? `
+                    <div class="flex items-center gap-1 z-30" onclick="event.stopPropagation()">
+                      <button onclick="openEditCdModal('${cd.id}')" class="w-7 h-7 rounded-lg bg-black/45 hover:bg-black/70 text-white flex items-center justify-center">✎</button>
+                      <button onclick="deleteCd('${cd.id}')" class="w-7 h-7 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white flex items-center justify-center">✕</button>
+                    </div>
+                  ` : `<span class="text-[10px] mono opacity-75">STEREO DISC</span>`}
+                </div>
+                <div class="my-auto pt-2">
+                  <h3 class="font-bold text-base leading-snug line-clamp-2">${escapeHtml(cd.title)}</h3>
+                  <p class="text-[11px] opacity-85 mt-1 line-clamp-2">${escapeHtml(cd.desc || cd.url)}</p>
+                </div>
+                <div class="pt-2 border-t border-current/20 flex items-end justify-between gap-2">
+                  <div class="truncate">
+                    <span class="text-[9px] mono uppercase tracking-wider opacity-75 block">${escapeHtml(cd.category || "General")}</span>
+                    <span class="text-[10px] mono opacity-90 truncate block max-w-[140px]">${escapeHtml(cleanDomain(cd.url))}</span>
+                  </div>
+                  <div class="bg-white/90 px-1.5 py-0.5 rounded-xs flex items-center gap-[1.5px] h-5 shrink-0">
+                    <span class="w-[1.5px] h-full bg-slate-900"></span><span class="w-[3px] h-full bg-slate-900"></span><span class="w-[1px] h-full bg-slate-900"></span><span class="w-[2.5px] h-full bg-slate-900"></span><span class="w-[1.5px] h-full bg-slate-900"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderSearchDropdownFilters() {
+      const catContainer = document.getElementById("categoryFilterChips");
+      const kwContainer = document.getElementById("quickKeywordsChips");
+      const categories = ["Todas", ...new Set(cds.map(c => (c.category || "General").trim()).filter(Boolean))];
+
+      catContainer.innerHTML = categories.map(cat => {
+        const active = normalizeStr(cat) === normalizeStr(activeCategory);
+        return `<button onclick="selectCategoryFilter('${cat.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-full text-[11px] font-medium transition ${active ? "bg-slate-800 text-white" : "bg-slate-200/70 text-slate-700 hover:bg-slate-300/70"}">${escapeHtml(cat)}</button>`;
+      }).join("");
+
+      const allKeywords = [...new Set(cds.flatMap(c => c.keywords || []))].slice(0, 12);
+      kwContainer.innerHTML = allKeywords.map(kw => {
+        const isSelected = normalizeStr(searchQuery) === normalizeStr(kw);
+        return `<button onclick="quickFilterByKeyword('${kw.replace(/'/g, "\\'")}')" class="px-2 py-0.5 rounded-lg text-[11px] mono transition ${isSelected ? "bg-amber-700 text-white" : "bg-amber-500/10 text-amber-900 hover:bg-amber-500/20"}">#${escapeHtml(kw)}</button>`;
+      }).join("");
+    }
+
+    function selectCategoryFilter(cat) {
+      activeCategory = cat;
+      renderSearchDropdownFilters();
+      renderShelf();
+    }
+
+    function quickFilterByKeyword(kw) {
+      const input = document.getElementById("searchInput");
+      searchQuery = normalizeStr(searchQuery) === normalizeStr(kw) ? "" : kw;
+      input.value = searchQuery;
+      document.getElementById("clearSearchBtn").classList.toggle("hidden", !searchQuery);
+      renderSearchDropdownFilters();
+      renderShelf();
+    }
+
+    function renderBgSwatches() {
+      const grid = document.getElementById("bgSwatchesGrid");
+      const presetsHtml = BG_PRESETS.map(p => `<button type="button" onclick="applyBg('${p.css}')" title="${p.name}" style="background: ${p.css};" class="w-11 h-11 rounded-xl border border-slate-300 shadow-xs hover:scale-105 transition"></button>`).join("");
+      const customTileHtml = `<button type="button" onclick="document.getElementById('customBgCreator').classList.toggle('hidden')" title="Crear tu propio degradado" style="background: conic-gradient(from 45deg, #fde68a, #fbcfe8, #bae6fd, #bbf7d0, #fde68a);" class="w-11 h-11 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-800 font-bold text-lg hover:scale-105 transition">+</button>`;
+      grid.innerHTML = presetsHtml + customTileHtml;
+    }
+
+    function applyBg(cssValue) {
+      currentBg = cssValue;
+      document.documentElement.style.setProperty("--bg-gradient", cssValue);
+      syncToGitHub();
+    }
+
+    function updateLiveBoxPreview() {
+      const c1 = document.getElementById("boxColor1").value;
+      const c2 = document.getElementById("boxColor2").value;
+      const c3 = document.getElementById("boxColor3").value;
+      const pattern = document.getElementById("boxPatternSelect").value;
+      const scale = document.getElementById("boxPatternScale").value;
+      const opacity = document.getElementById("boxPatternOpacity").value;
+      const title = document.getElementById("cdTitleInput").value || "Título de Ejemplo";
+
+      document.getElementById("scaleValLabel").textContent = `${scale}%`;
+      document.getElementById("opacityValLabel").textContent = `${opacity}%`;
+
+      const previewEl = document.getElementById("liveBoxPreview");
+      previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, pattern, scale, opacity })} color: ${currentModalTextColor};`);
+      document.querySelector("#livePreviewText p:last-child").textContent = title;
+
+      const imgVal = document.getElementById("cdImgInput").value.trim();
+      const miniDisc = document.getElementById("discMiniPreview");
+      miniDisc.style.backgroundImage = imgVal ? `url('${imgVal.replace(/'/g, "\\'")}')` : "none";
+    }
+
+    function renderModalKeywords() {
+      const container = document.getElementById("activeKeywordsContainer");
+      if (modalKeywords.length === 0) {
+        container.innerHTML = `<span class="text-[11px] text-amber-800/60 italic">Sin palabras ocultas</span>`;
+        return;
+      }
+      container.innerHTML = modalKeywords.map((k, i) => `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] bg-amber-900 text-amber-50 font-medium">#${escapeHtml(k)} <button type="button" onclick="removeModalKeyword(${i})" class="hover:text-rose-300">✕</button></span>`).join("");
+    }
+
+    function addModalKeywordFromStr(rawStr) {
+      rawStr.split(",").map(s => s.trim()).filter(Boolean).forEach(p => {
+        if (!modalKeywords.some(existing => normalizeStr(existing) === normalizeStr(p))) modalKeywords.push(p);
+      });
+      renderModalKeywords();
+    }
+
+    function removeModalKeyword(idx) {
+      modalKeywords.splice(idx, 1);
+      renderModalKeywords();
+    }
+
+    function openNewCdModal() {
+      if (!isOwnerMode) return;
+      document.getElementById("modalTitle").textContent = "Crear Nuevo CD";
+      document.getElementById("editCdId").value = "";
+      document.getElementById("cdTitleInput").value = "";
+      document.getElementById("cdCategoryInput").value = "";
+      document.getElementById("cdUrlInput").value = "";
+      document.getElementById("cdImgInput").value = "";
+      document.getElementById("cdImgFile").value = "";
+      document.getElementById("cdDescInput").value = "";
+      document.getElementById("imgStatusBadge").textContent = "URL o Archivo de tu PC";
+      modalKeywords = [];
+      renderModalKeywords();
+      updateLiveBoxPreview();
+      document.getElementById("cdModal").classList.replace("hidden", "flex");
+    }
+
+    function openEditCdModal(id) {
+      if (!isOwnerMode) return;
+      const item = cds.find(c => c.id === id);
+      if (!item) return;
+      document.getElementById("modalTitle").textContent = "Editar CD";
+      document.getElementById("editCdId").value = item.id;
+      document.getElementById("cdTitleInput").value = item.title || "";
+      document.getElementById("cdCategoryInput").value = item.category || "";
+      document.getElementById("cdUrlInput").value = item.url || "";
+      document.getElementById("cdImgInput").value = item.img || "";
+      document.getElementById("cdImgFile").value = "";
+      document.getElementById("cdDescInput").value = item.desc || "";
+      modalKeywords = Array.isArray(item.keywords) ? [...item.keywords] : [];
+      renderModalKeywords();
+      document.getElementById("boxColor1").value = item.design?.c1 || "#1e1b4b";
+      document.getElementById("boxColor2").value = item.design?.c2 || "#4338ca";
+      document.getElementById("boxColor3").value = item.design?.c3 || "#ec4899";
+      document.getElementById("boxPatternSelect").value = item.design?.pattern || "prism";
+      document.getElementById("boxPatternScale").value = item.design?.scale ?? 50;
+      document.getElementById("boxPatternOpacity").value = item.design?.opacity ?? 45;
+      currentModalTextColor = item.design?.textColor || "#ffffff";
+      updateLiveBoxPreview();
+      document.getElementById("cdModal").classList.replace("hidden", "flex");
+    }
+
+    function closeCdModal() {
+      document.getElementById("cdModal").classList.replace("flex", "hidden");
+    }
+
+    function deleteCd(id) {
+      if (!isOwnerMode) return;
+      cds = cds.filter(c => c.id !== id);
+      renderSearchDropdownFilters();
+      renderShelf();
+      syncToGitHub();
+    }
+
+    function refreshGhConfigUI() {
+      const cfg = getGhConfig();
+      const hasCfg = Boolean(cfg && cfg.owner && cfg.repo && cfg.token);
+      document.getElementById("ghConnectedDot").classList.toggle("hidden", !hasCfg);
+      const badge = document.getElementById("ghBadge");
+      badge.textContent = hasCfg ? "Conectado" : "Sin vincular";
+      badge.className = `text-[10px] px-2 py-0.5 rounded-full ${hasCfg ? "bg-emerald-100 text-emerald-800 font-semibold" : "bg-slate-200 text-slate-600"}`;
+      if (cfg) {
+        document.getElementById("ghOwnerInput").value = cfg.owner || "";
+        document.getElementById("ghRepoInput").value = cfg.repo || "";
+        document.getElementById("ghBranchInput").value = cfg.branch || "main";
+        document.getElementById("ghTokenInput").value = cfg.token || "";
+      }
+    }
+
+    function updateOwnerUI() {
+      document.getElementById("lockClosedIcon").classList.toggle("hidden", isOwnerMode);
+      document.getElementById("lockOpenIcon").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("ownerDot").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("brushBtn").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("addCdBtn").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("githubConfigBtn").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("lockLoginView").classList.toggle("hidden", isOwnerMode);
+      document.getElementById("lockActiveView").classList.toggle("hidden", !isOwnerMode);
+      refreshGhConfigUI();
+      renderShelf();
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadInitialData();
+      renderBgSwatches();
+      renderSearchDropdownFilters();
+      renderShelf();
+
+      const lupaBtn = document.getElementById("lupaBtn");
+      const searchExpandBox = document.getElementById("searchExpandBox");
+      const searchOptionsDropdown = document.getElementById("searchOptionsDropdown");
+      const searchInput = document.getElementById("searchInput");
+      const clearSearchBtn = document.getElementById("clearSearchBtn");
+      const lockPopover = document.getElementById("lockPopover");
+      const brushPopover = document.getElementById("brushPopover");
+      const githubPopover = document.getElementById("githubPopover");
+
+      lupaBtn.addEventListener("click", () => {
+        const isOpen = searchExpandBox.classList.toggle("open");
+        searchOptionsDropdown.classList.toggle("hidden", !isOpen);
+        lockPopover.classList.add("hidden");
+        brushPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+        if (isOpen) setTimeout(() => searchInput.focus(), 150);
+      });
+
+      searchInput.addEventListener("input", e => {
+        searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle("hidden", !searchQuery);
+        renderSearchDropdownFilters();
+        renderShelf();
+      });
+
+      clearSearchBtn.addEventListener("click", () => {
+        searchQuery = "";
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        renderSearchDropdownFilters();
+        renderShelf();
+      });
+
+      document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+        searchQuery = "";
+        activeCategory = "Todas";
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        renderSearchDropdownFilters();
+        renderShelf();
+      });
+
+      document.getElementById("lockBtn").addEventListener("click", () => {
+        lockPopover.classList.toggle("hidden");
+        brushPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+        searchOptionsDropdown.classList.add("hidden");
+      });
+
+      document.getElementById("githubConfigBtn").addEventListener("click", () => {
+        githubPopover.classList.toggle("hidden");
+        lockPopover.classList.add("hidden");
+        brushPopover.classList.add("hidden");
+        searchOptionsDropdown.classList.add("hidden");
+      });
+
+      document.getElementById("saveGhConfigBtn").addEventListener("click", () => {
+        const cfg = {
+          owner: document.getElementById("ghOwnerInput").value.trim(),
+          repo: document.getElementById("ghRepoInput").value.trim(),
+          branch: document.getElementById("ghBranchInput").value.trim() || "main",
+          token: document.getElementById("ghTokenInput").value.trim()
+        };
+        localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(cfg));
+        refreshGhConfigUI();
+        githubPopover.classList.add("hidden");
+        syncToGitHub();
+      });
+
+      document.getElementById("unlockForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const statusMsg = document.getElementById("lockStatusMsg");
+        const inputEl = document.getElementById("ownerPassInput");
+        const now = Date.now();
+        const rl = getRateLimitState();
+
+        if (rl.lockUntil > now) {
+          statusMsg.textContent = `Bloqueado. Esperá ${Math.ceil((rl.lockUntil - now) / 1000)}s.`;
+          statusMsg.classList.remove("hidden");
+          return;
+        }
+
+        await new Promise(r => setTimeout(r, 250));
+
+        if (verifyOwnerKey(inputEl.value)) {
+          saveRateLimitState({ attempts: 0, lockUntil: 0 });
+          isOwnerMode = true;
+          inputEl.value = "";
+          statusMsg.classList.add("hidden");
+          updateOwnerUI();
+          lockPopover.classList.add("hidden");
+          showToast("Modo Propietario activado");
+        } else {
+          rl.attempts += 1;
+          if (rl.attempts >= 3) {
+            rl.lockUntil = Date.now() + 30000 * Math.pow(2, rl.attempts - 3);
+            statusMsg.textContent = `Demasiados intentos. Bloqueado por 30s.`;
+          } else {
+            statusMsg.textContent = `Código incorrecto (${3 - rl.attempts} intentos restantes).`;
+          }
+          saveRateLimitState(rl);
+          statusMsg.classList.remove("hidden");
+        }
+      });
+
+      document.getElementById("logoutOwnerBtn").addEventListener("click", () => {
+        isOwnerMode = false;
+        updateOwnerUI();
+        lockPopover.classList.add("hidden");
+      });
+
+      document.getElementById("brushBtn").addEventListener("click", () => {
+        brushPopover.classList.toggle("hidden");
+        lockPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+      });
+
+      document.getElementById("applyCustomBgBtn").addEventListener("click", () => {
+        const css = buildCustomBgGradient(
+          document.getElementById("bgCustomC1").value,
+          document.getElementById("bgCustomC2").value,
+          document.getElementById("bgCustomC3").value,
+          document.getElementById("bgCustomStyle").value
+        );
+        applyBg(css);
+      });
+
+      document.getElementById("addCdBtn").addEventListener("click", openNewCdModal);
+      document.getElementById("closeModalBtn").addEventListener("click", closeCdModal);
+      document.getElementById("cancelModalBtn").addEventListener("click", closeCdModal);
+
+      document.getElementById("cdImgFile").addEventListener("change", async e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const badge = document.getElementById("imgStatusBadge");
+        badge.textContent = "Optimizando imagen...";
+        try {
+          const compressedDataUrl = await compressLocalImage(file);
+          document.getElementById("cdImgInput").value = compressedDataUrl;
+          badge.textContent = "✓ Imagen de PC lista para guardar en la nube";
+          updateLiveBoxPreview();
+        } catch {
+          badge.textContent = "Error al procesar la imagen";
+        }
+      });
+
+      const kwDraft = document.getElementById("keywordDraftInput");
+      document.getElementById("addKeywordBtn").addEventListener("click", () => {
+        if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
+      });
+      kwDraft.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
+        }
+      });
+
+      document.querySelectorAll(".quick-tag-btn").forEach(btn => {
+        btn.addEventListener("click", () => addModalKeywordFromStr(btn.dataset.quicktag));
+      });
+
+      ["boxColor1", "boxColor2", "boxColor3", "boxPatternSelect", "boxPatternScale", "boxPatternOpacity", "cdTitleInput", "cdImgInput"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updateLiveBoxPreview);
+      });
+
+      document.querySelectorAll(".text-color-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          currentModalTextColor = btn.dataset.textcolor;
+          updateLiveBoxPreview();
+        });
+      });
+
+      document.getElementById("cdForm").addEventListener("submit", e => {
+        e.preventDefault();
+        if (!isOwnerMode) return;
+        if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
+
+        const editId = document.getElementById("editCdId").value;
+        const cdData = {
+          id: editId || "cd-" + Date.now(),
+          title: document.getElementById("cdTitleInput").value.trim(),
+          category: document.getElementById("cdCategoryInput").value.trim() || "General",
+          url: document.getElementById("cdUrlInput").value.trim(),
+          img: document.getElementById("cdImgInput").value.trim(),
+          desc: document.getElementById("cdDescInput").value.trim(),
+          keywords: [...modalKeywords],
+          design: {
+            c1: document.getElementById("boxColor1").value,
+            c2: document.getElementById("boxColor2").value,
+            c3: document.getElementById("boxColor3").value,
+            pattern: document.getElementById("boxPatternSelect").value,
+            scale: Number(document.getElementById("boxPatternScale").value),
+            opacity: Number(document.getElementById("boxPatternOpacity").value),
+            textColor: currentModalTextColor
+          }
+        };
+
+        if (editId) {
+          cds = cds.map(c => (c.id === editId ? cdData : c));
+        } else {
+          cds.unshift(cdData);
+        }
+
+        renderSearchDropdownFilters();
+        renderShelf();
+        closeCdModal();
+        syncToGitHub();
+      });
+    });
+  </script>
+</body>
+</html>
