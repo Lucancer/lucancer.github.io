@@ -1,5 +1,5 @@
 {
-  "bg": "conic-gradient(#FDE2E4 25%, #FFF8F0 0 50%, #FDE2E4 0 75%, #FFF8F0 0) 0 0 / 48px 48px",
+  "bg": "radial-gradient(#FFFFFF 1px, transparent 1.5px) 0 0 / 40px 40px, radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1.5px) 20px 20px / 40px 40px, linear-gradient(180deg, #0B1026 0%, #1E1B4B 100%)",
   "cds": [
     {
       "id": "cd-1792221942853",
