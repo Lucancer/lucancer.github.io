@@ -115,9 +115,9 @@
         "Skip"
       ],
       "design": {
-        "c1": "#ff9a35",
-        "c2": "#ffff80",
-        "c3": "#ff4242",
+        "c1": "#5f76d6",
+        "c2": "#9de1e1",
+        "c3": "#5b5bff",
         "pattern": "triangles",
         "scale": 75,
         "opacity": 90,
