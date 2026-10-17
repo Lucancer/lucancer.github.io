@@ -8,7 +8,12 @@
       "url": "https://www.youtube.com",
       "img": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
       "desc": "01. Suscripciones • 02. Música • 03. Tutoriales",
-      "keywords": ["Video", "Streaming", "Musica", "Web"],
+      "keywords": [
+        "Video",
+        "Streaming",
+        "Musica",
+        "Web"
+      ],
       "design": {
         "c1": "#450a0a",
         "c2": "#dc2626",
@@ -26,7 +31,12 @@
       "url": "https://github.com",
       "img": "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?auto=format&fit=crop&w=600&q=80",
       "desc": "01. Proyectos C • 02. Web • 03. Scripts",
-      "keywords": ["Codigo", "Programacion", "Web", "Git"],
+      "keywords": [
+        "Codigo",
+        "Programacion",
+        "Web",
+        "Git"
+      ],
       "design": {
         "c1": "#022c22",
         "c2": "#059669",
