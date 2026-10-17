@@ -50,6 +50,12 @@
       overflow-x: hidden;
     }
 
+    /* En pantallas táctiles no hay "pasar el mouse": el cartelito del disco no se muestra
+       (al cambiar de estantería ya aparece un aviso abajo) */
+    @media (hover: none) {
+      .shelf-tooltip { display: none; }
+    }
+
     /* Firma con letra de máquina de escribir vieja */
     .signature {
       position: fixed;
@@ -283,6 +289,43 @@
     <span id="syncToastText">Sincronizado con GitHub</span>
   </div>
 
+  <!-- BOTÓN DISCO (arriba a la izquierda): cambia entre la Estantería de Pochincho y "Mi estantería" -->
+  <div class="fixed top-5 left-5 z-50">
+    <div class="relative group">
+      <button
+        id="shelfToggleBtn"
+        type="button"
+        class="glass-pill w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 transition"
+        aria-label="Cambiar de estantería"
+      >
+        <svg class="w-7 h-7 transition-transform duration-700 group-hover:rotate-180" viewBox="0 0 24 24">
+          <defs>
+            <linearGradient id="discGradOwner" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#94a3b8" />
+              <stop offset="45%" stop-color="#e2e8f0" />
+              <stop offset="100%" stop-color="#64748b" />
+            </linearGradient>
+            <linearGradient id="discGradMine" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f472b6" />
+              <stop offset="35%" stop-color="#fde68a" />
+              <stop offset="65%" stop-color="#6ee7b7" />
+              <stop offset="100%" stop-color="#818cf8" />
+            </linearGradient>
+          </defs>
+          <circle id="shelfDiscFace" cx="12" cy="12" r="10.5" fill="url(#discGradOwner)" stroke="rgba(15,23,42,0.35)" stroke-width="0.8" />
+          <path d="M6.2 8.5a7 7 0 0 1 4-3.6" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.1" stroke-linecap="round" />
+          <circle cx="12" cy="12" r="3.6" fill="rgba(255,255,255,0.85)" stroke="rgba(15,23,42,0.25)" stroke-width="0.6" />
+          <circle cx="12" cy="12" r="1.4" fill="#F5EFE6" stroke="rgba(15,23,42,0.35)" stroke-width="0.5" />
+        </svg>
+      </button>
+      <!-- Cartelito al pasar el mouse -->
+      <div class="shelf-tooltip pointer-events-none absolute top-full left-0 mt-2 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition glass-pill rounded-xl px-3 py-1.5 whitespace-nowrap text-left z-50">
+        <p id="shelfTooltipTitle" class="text-xs font-semibold text-slate-800">Estantería de Pochincho</p>
+        <p id="shelfTooltipHint" class="text-[10px] text-slate-500">Tocá para ver Mi estantería</p>
+      </div>
+    </div>
+  </div>
+
   <!-- BARRA SUPERIOR MINIMALISTA -->
   <div class="fixed top-5 right-5 z-50 flex flex-col items-end gap-2">
     
@@ -305,41 +348,6 @@
             <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
           </svg>
         </button>
-      </div>
-
-      <!-- Botón Disco: cambia entre la Estantería de Pochincho y "Mi estantería" -->
-      <div class="relative group">
-        <button
-          id="shelfToggleBtn"
-          type="button"
-          class="glass-pill w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 transition"
-          aria-label="Cambiar de estantería"
-        >
-          <svg class="w-7 h-7 transition-transform duration-700 group-hover:rotate-180" viewBox="0 0 24 24">
-            <defs>
-              <linearGradient id="discGradOwner" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#94a3b8" />
-                <stop offset="45%" stop-color="#e2e8f0" />
-                <stop offset="100%" stop-color="#64748b" />
-              </linearGradient>
-              <linearGradient id="discGradMine" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#f472b6" />
-                <stop offset="35%" stop-color="#fde68a" />
-                <stop offset="65%" stop-color="#6ee7b7" />
-                <stop offset="100%" stop-color="#818cf8" />
-              </linearGradient>
-            </defs>
-            <circle id="shelfDiscFace" cx="12" cy="12" r="10.5" fill="url(#discGradOwner)" stroke="rgba(15,23,42,0.35)" stroke-width="0.8" />
-            <path d="M6.2 8.5a7 7 0 0 1 4-3.6" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.1" stroke-linecap="round" />
-            <circle cx="12" cy="12" r="3.6" fill="rgba(255,255,255,0.85)" stroke="rgba(15,23,42,0.25)" stroke-width="0.6" />
-            <circle cx="12" cy="12" r="1.4" fill="#F5EFE6" stroke="rgba(15,23,42,0.35)" stroke-width="0.5" />
-          </svg>
-        </button>
-        <!-- Cartelito al pasar el mouse -->
-        <div class="pointer-events-none absolute top-full right-0 mt-2 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition glass-pill rounded-xl px-3 py-1.5 whitespace-nowrap text-right z-50">
-          <p id="shelfTooltipTitle" class="text-xs font-semibold text-slate-800">Estantería de Pochincho</p>
-          <p id="shelfTooltipHint" class="text-[10px] text-slate-500">Tocá para ver Mi estantería</p>
-        </div>
       </div>
 
       <!-- Botón GitHub API -->
@@ -391,7 +399,7 @@
       <button
         id="lockBtn"
         class="glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:scale-105 transition relative"
-        title="Modo Propietario"
+        title="Modo Admin"
       >
         <svg id="lockClosedIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
           <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
@@ -422,7 +430,7 @@
     <div id="lockPopover" class="hidden glass-pill rounded-2xl p-4 w-72 shadow-xl">
       <div id="lockLoginView">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-slate-700">Modo Propietario</span>
+          <span class="text-xs font-semibold text-slate-700">Modo Admin</span>
           <span class="text-[10px] mono text-slate-400">¡WHITESNAKE!</span>
         </div>
         <form id="unlockForm" class="flex items-center gap-1.5">
@@ -442,7 +450,7 @@
       <div id="lockActiveView" class="hidden">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold text-emerald-700">Modo Propietario Activo</p>
+            <p class="text-xs font-semibold text-emerald-700">Modo Admin activo</p>
             <p class="text-[11px] text-slate-500">Edición desbloqueada</p>
           </div>
           <button id="logoutOwnerBtn" class="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 text-xs font-medium transition">
@@ -1274,7 +1282,7 @@
           ? (mine ? "Tu estantería está vacía." : "Todavía no hay discos en esta estantería.")
           : "No se encontraron discos con ese criterio.";
         const hint = document.getElementById("emptyStateHint");
-        hint.textContent = "Tocá el + de arriba para agregar tu primer disco. ¿Te gustó algún link de Pochincho? Abrilo y copialo acá.";
+        hint.textContent = "Tocá el + de arriba para agregar tu primer disco.";
         hint.classList.toggle("hidden", !(shelfEmpty && mine));
         document.getElementById("resetFiltersBtn").classList.toggle("hidden", shelfEmpty);
         emptyState.classList.remove("hidden");
@@ -2087,6 +2095,13 @@
       document.getElementById("addCdBtn").title = mine ? "Agregar un disco a Mi estantería" : "Crear nuevo CD";
       document.getElementById("backupBtn").classList.toggle("hidden", !mine);
       if (!mine) document.getElementById("backupPopover").classList.add("hidden");
+      // En "Mi estantería" no se muestran el candado (Modo Admin) ni GitHub
+      document.getElementById("lockBtn").classList.toggle("hidden", mine);
+      document.getElementById("githubConfigBtn").classList.toggle("hidden", mine || !isOwnerMode);
+      if (mine) {
+        document.getElementById("lockPopover").classList.add("hidden");
+        document.getElementById("githubPopover").classList.add("hidden");
+      }
       document.getElementById("myShelfCount").textContent = `${myCds.length} disco${myCds.length === 1 ? "" : "s"}`;
     }
 
@@ -2177,7 +2192,6 @@
       document.getElementById("lockOpenIcon").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("ownerDot").classList.toggle("hidden", !isOwnerMode);
       updateShelfUI();
-      document.getElementById("githubConfigBtn").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("lockLoginView").classList.toggle("hidden", isOwnerMode);
       document.getElementById("lockActiveView").classList.toggle("hidden", !isOwnerMode);
       refreshGhConfigUI();
@@ -2324,7 +2338,7 @@
           statusMsg.classList.add("hidden");
           updateOwnerUI();
           lockPopover.classList.add("hidden");
-          showToast("Modo Propietario activado");
+          showToast("Modo Admin activado");
         } else {
           rl.attempts += 1;
           if (rl.attempts >= 3) {
