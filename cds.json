@@ -1,5 +1,13 @@
 {
-  "bg": "radial-gradient(#D6CBB8 1.2px, transparent 1.8px) 0 0 / 22px 22px, linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 100%)",
+  "bg": "linear-gradient(#ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, #ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, #0000a0 0%, #8080ff 100%)",
+  "customBgs": [
+    {
+      "id": "bg-1792223580574",
+      "name": "Fondo personalizado",
+      "css": "linear-gradient(#ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, #ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, #0000a0 0%, #8080ff 100%)"
+    }
+  ],
+  "hiddenBgs": [],
   "cds": [
     {
       "id": "cd-1792221942853",
