@@ -588,6 +588,21 @@
             <option value="grid">Cuadrícula (Color 3)</option>
             <option value="checker">Damero (Color 1 y 2)</option>
             <option value="sunburst">Rayos de Sol (Color 1 y 2)</option>
+            <optgroup label="Estilos especiales">
+              <option value="vapor-grid">Atardecer Vaporwave (cielo, sol, grilla)</option>
+              <option value="bubbles">Burbujas Frutiger (cielo 1 y 2, tinte 3)</option>
+              <option value="chrome">Cromo Y2K (3 colores en bandas)</option>
+              <option value="stars">Cielo con Estrellas (estrellas = Color 3)</option>
+              <option value="scanlines">Pantalla CRT (brillo = Color 3)</option>
+              <option value="neon-corners">Neón en las Esquinas (fondo 1, luces 2 y 3)</option>
+              <option value="zigzag">Zigzag (Color 1 y 2)</option>
+              <option value="argyle">Rombos / Argyle (fondo, rombos, líneas)</option>
+            </optgroup>
+            <optgroup label="Ideales para Rojo y Negro">
+              <option value="carbon">Fibra de Carbono (base 1, brillo 2)</option>
+              <option value="web">Telaraña (fondo 1, brillo 2, hilos 3)</option>
+              <option value="racing">Rayas de Corredor (fondo, rayas, filete)</option>
+            </optgroup>
           </select>
         </div>
         <button id="applyCustomBgBtn" class="w-full py-1.5 rounded-xl bg-slate-800 text-white text-xs font-medium hover:bg-slate-700 transition">
@@ -746,6 +761,33 @@
                   <option value="zigzag">Zigzag</option>
                   <option value="triangles">Triángulos</option>
                 </optgroup>
+                <optgroup label="Vaporwave & Frutiger">
+                  <option value="frutiger">Frutiger Aero (burbujas y brillo)</option>
+                  <option value="vaporsun">Sol Vaporwave</option>
+                  <option value="holo">Holográfico Iridiscente</option>
+                  <option value="bokeh">Luces Bokeh</option>
+                </optgroup>
+                <optgroup label="Internet viejo / Y2K">
+                  <option value="chrome">Cromo Líquido Y2K</option>
+                  <option value="win98">Ventana Windows 98</option>
+                  <option value="pixel">Píxeles 8 bits</option>
+                  <option value="memphis">Memphis 90s</option>
+                  <option value="hearts">Corazones Y2K</option>
+                  <option value="zebra">Cebra</option>
+                </optgroup>
+                <optgroup label="Cyberpunk & Futuro">
+                  <option value="glitch">Glitch RGB</option>
+                  <option value="circuit">Circuito Impreso</option>
+                  <option value="honeycomb">Panal Hexagonal</option>
+                  <option value="equalizer">Ecualizador</option>
+                  <option value="topo">Mapa Topográfico</option>
+                </optgroup>
+                <optgroup label="Rock (ideal Rojo y Negro)">
+                  <option value="carbon">Fibra de Carbono</option>
+                  <option value="racing">Racing / Bandera a Cuadros</option>
+                  <option value="flames">Llamas</option>
+                  <option value="spiderweb">Telaraña Emo</option>
+                </optgroup>
                 <optgroup label="Divertidos">
                   <option value="matrix">Letras Tipo Matrix</option>
                   <option value="animal">Animal Print</option>
@@ -886,7 +928,11 @@
     // Categorías de fondos. "Claros" y "Oscuros" vienen de fábrica; el dueño puede agregar más.
     const DEFAULT_BG_CATEGORIES = [
       { id: "light", name: "Claros" },
-      { id: "dark", name: "Oscuros" }
+      { id: "dark", name: "Oscuros" },
+      { id: "vapor", name: "Vaporwave & Frutiger" },
+      { id: "retro", name: "Internet viejo / Y2K" },
+      { id: "cyber", name: "Cyberpunk & Futuro" },
+      { id: "redblack", name: "Rojo y Negro" }
     ];
     let savedBgCategories = DEFAULT_BG_CATEGORIES.map(c => ({ ...c }));
     // Fondos de fábrica que el dueño movió de categoría: { idDelFondo: idDeCategoria }
@@ -902,9 +948,13 @@
       if (Array.isArray(data.hiddenBgs)) savedHiddenBgs = data.hiddenBgs.filter(id => typeof id === "string");
       if (Array.isArray(data.bgCategories)) {
         const valid = data.bgCategories.filter(isValidBgCategory);
-        // Las categorías de fábrica siempre existen
-        const missingDefaults = DEFAULT_BG_CATEGORIES.filter(d => !valid.some(c => c.id === d.id));
-        savedBgCategories = [...missingDefaults.map(c => ({ ...c })), ...valid];
+        // Las categorías de fábrica siempre existen. Si falta alguna (por ejemplo, una nueva),
+        // se agrega justo después de las de fábrica que ya estaban, antes de las creadas por el dueño.
+        const missingDefaults = DEFAULT_BG_CATEGORIES.filter(d => !valid.some(c => c.id === d.id)).map(c => ({ ...c }));
+        const isDefault = c => DEFAULT_BG_CATEGORIES.some(d => d.id === c.id);
+        let insertAt = 0;
+        valid.forEach((c, i) => { if (isDefault(c)) insertAt = i + 1; });
+        savedBgCategories = [...valid.slice(0, insertAt), ...missingDefaults, ...valid.slice(insertAt)];
       }
       if (data.presetCats && typeof data.presetCats === "object" && !Array.isArray(data.presetCats)) {
         savedPresetCats = {};
@@ -1179,8 +1229,80 @@
       { id: "synthwave", name: "Synthwave", css: "linear-gradient(180deg, #1A0B2E 0%, #4A1259 55%, #FF6B9D 100%)" },
       { id: "vinyl-grooves", name: "Surcos de Vinilo", css: "repeating-radial-gradient(circle at 50% 50%, #111827 0 2px, #1F2937 2px 4px)" },
       { id: "deep-forest", name: "Bosque Nocturno", css: "radial-gradient(at 20% 80%, #065F46 0, transparent 55%), linear-gradient(160deg, #052E16 0%, #0F172A 100%)" },
-      { id: "starry", name: "Cielo Estrellado", css: "radial-gradient(#FFFFFF 1px, transparent 1.5px) 0 0 / 40px 40px, radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1.5px) 20px 20px / 40px 40px, linear-gradient(180deg, #0B1026 0%, #1E1B4B 100%)" }
+      { id: "starry", name: "Cielo Estrellado", css: "radial-gradient(#FFFFFF 1px, transparent 1.5px) 0 0 / 40px 40px, radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1.5px) 20px 20px / 40px 40px, linear-gradient(180deg, #0B1026 0%, #1E1B4B 100%)" },
+
+      /* ----- Vaporwave & Frutiger ----- */
+      { id: "frutiger-aero", cat: "vapor", name: "Frutiger Aero",
+        css: "radial-gradient(circle at 16% 26%, rgba(255,255,255,0.95) 0 0.9%, rgba(255,255,255,0.35) 1.3% 3.6%, transparent 4%), radial-gradient(circle at 80% 16%, rgba(255,255,255,0.9) 0 0.6%, rgba(255,255,255,0.3) 1% 2.6%, transparent 3%), radial-gradient(circle at 64% 58%, rgba(255,255,255,0.9) 0 0.8%, rgba(255,255,255,0.28) 1.2% 4.6%, transparent 5%), radial-gradient(circle at 34% 64%, rgba(255,255,255,0.85) 0 0.5%, rgba(255,255,255,0.25) 0.9% 2%, transparent 2.3%), radial-gradient(120% 55% at 30% 110%, #8BE36B 0%, #3FA34D 35%, transparent 36%), radial-gradient(90% 45% at 90% 112%, #6CCB4F 0%, #2F8F3F 40%, transparent 41%), linear-gradient(180deg, #1E90E6 0%, #5EC2F5 42%, #C8EEFC 72%, #ECFBFF 100%)" },
+      { id: "aqua-bubbles", cat: "vapor", name: "Burbujas Aqua",
+        css: `${bgSvg("<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><defs><radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='#fff' stop-opacity='0.95'/><stop offset='0.4' stop-color='#fff' stop-opacity='0.25'/><stop offset='1' stop-color='#DFF7FF' stop-opacity='0.15'/></radialGradient></defs><g fill='url(#b)' stroke='#fff' stroke-opacity='0.7'><circle cx='46' cy='52' r='26'/><circle cx='150' cy='34' r='12'/><circle cx='138' cy='140' r='34'/><circle cx='36' cy='160' r='10'/><circle cx='96' cy='104' r='6'/></g></svg>")} 0 0 / 260px 260px, linear-gradient(160deg, #0284C7 0%, #22D3EE 50%, #A7F3D0 100%)` },
+      { id: "vapor-sunset", cat: "vapor", name: "Atardecer Vaporwave",
+        css: "repeating-linear-gradient(0deg, rgba(255,113,206,0.8) 0 2px, transparent 2px 36px) 0 100% / 100% 36% no-repeat, repeating-linear-gradient(90deg, rgba(255,113,206,0.8) 0 2px, transparent 2px 70px) 0 100% / 100% 36% no-repeat, linear-gradient(#22093C, #22093C) 0 100% / 100% 36% no-repeat, radial-gradient(circle at 50% 64%, #FFE66D 0 7%, #FF9A3C 11%, #FF2E88 16%, transparent 16.5%), linear-gradient(180deg, #12052E 0%, #4B1585 38%, #C2268F 58%, #FF6EC7 64%)" },
+      { id: "vapor-pastel", cat: "vapor", name: "Vaporwave Pastel",
+        css: "linear-gradient(rgba(255,255,255,0.28) 1px, transparent 1px) 0 0 / 44px 44px, linear-gradient(90deg, rgba(255,255,255,0.28) 1px, transparent 1px) 0 0 / 44px 44px, linear-gradient(135deg, #FFB3E6 0%, #D7B8FF 35%, #A0EFFF 70%, #B8FFE0 100%)" },
+      { id: "aero-glass", cat: "vapor", name: "Ventana Aero (2009)",
+        css: "linear-gradient(170deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 34%), repeating-linear-gradient(115deg, rgba(255,255,255,0.07) 0 2px, transparent 2px 110px), radial-gradient(90% 50% at 70% 110%, #4ADE80 0%, transparent 60%), linear-gradient(180deg, #1E3A8A 0%, #2563EB 48%, #60A5FA 100%)" },
+
+      /* ----- Internet viejo / Y2K ----- */
+      { id: "win98-teal", cat: "retro", name: "Escritorio 98", css: "linear-gradient(#008080, #008080)" },
+      { id: "xp-hills", cat: "retro", name: "Colinas XP",
+        css: "radial-gradient(130% 60% at 28% 108%, #6CC644 0%, #3E9A2A 44%, transparent 45%), radial-gradient(90% 48% at 88% 112%, #58B83A 0%, #2F7F22 46%, transparent 47%), radial-gradient(18% 9% at 24% 22%, rgba(255,255,255,0.95), transparent), radial-gradient(14% 7% at 30% 20%, rgba(255,255,255,0.9), transparent), radial-gradient(16% 8% at 72% 16%, rgba(255,255,255,0.85), transparent), linear-gradient(180deg, #1F64D4 0%, #4B95EC 48%, #A9D4FA 72%)" },
+      { id: "geocities-stars", cat: "retro", name: "Estrellas GeoCities",
+        css: `${bgSvg("<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><g fill='#FFE600'><path d='M24 14l3 8h8l-6 5 2 8-7-5-7 5 2-8-6-5h8z'/><path d='M104 88l2 5h5l-4 3 1 5-4-3-4 3 1-5-4-3h5z'/></g><g fill='#fff'><circle cx='80' cy='20' r='1.5'/><circle cx='60' cy='70' r='1'/><circle cx='130' cy='50' r='1.2'/><circle cx='20' cy='110' r='1.4'/><circle cx='70' cy='128' r='1'/><path d='M50 100l1 3 3 1-3 1-1 3-1-3-3-1 3-1z'/></g></svg>")} 0 0 / 140px 140px, #05030F` },
+      { id: "web97-gray", cat: "retro", name: "Página Web 1997",
+        css: `${bgSvg("<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>")} 0 0 / 160px 160px, #C0C0C0` },
+      { id: "y2k-chrome", cat: "retro", name: "Cromo Y2K",
+        css: "linear-gradient(180deg, #F5F7FA 0%, #C3CBD6 18%, #FFFFFF 32%, #8A97A8 48%, #E6EBF1 60%, #6B778A 78%, #DDE3EA 100%)" },
+      { id: "y2k-bubblegum", cat: "retro", name: "Chicle Y2K",
+        css: `${bgSvg("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g fill='#fff'><path d='M20 10l2.5 7.5 7.5 2.5-7.5 2.5-2.5 7.5-2.5-7.5-7.5-2.5 7.5-2.5z'/><path d='M86 70l1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z'/></g><path d='M70 22 C64 18 62 14 64 11 C66 8 69 9 70 11 C71 9 74 8 76 11 C78 14 76 18 70 22 Z' fill='#FF4FB8' fill-opacity='0.6'/><path d='M30 98 C24 94 22 90 24 87 C26 84 29 85 30 87 C31 85 34 84 36 87 C38 90 36 94 30 98 Z' fill='#fff' fill-opacity='0.8'/></svg>")} 0 0 / 150px 150px, linear-gradient(135deg, #FF9AD5 0%, #FFC8EC 45%, #C8B6FF 100%)` },
+      { id: "myspace-glitter", cat: "retro", name: "Brillitos MySpace",
+        css: "radial-gradient(#FFD1F0 1px, transparent 1.6px) 0 0 / 18px 18px, radial-gradient(#FF4FB8 1.2px, transparent 1.8px) 9px 9px / 18px 18px, radial-gradient(ellipse at 50% 0%, #8B1A5C 0%, transparent 65%), linear-gradient(135deg, #1A0613 0%, #4A0C33 100%)" },
+      { id: "tumblr-2012", cat: "retro", name: "Pastel Grunge 2012",
+        css: `${bgSvg("<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.3 0 0 0 0.16 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>")} 0 0 / 180px 180px, linear-gradient(135deg, #F8C8DC 0%, #C3B1E1 50%, #A7C7E7 100%)` },
+      { id: "insta-2012", cat: "retro", name: "Filtro Vintage 2012",
+        css: "radial-gradient(ellipse at center, transparent 40%, rgba(70,35,15,0.5) 100%), linear-gradient(135deg, #F6D5A8 0%, #E8A87C 45%, #C38D9E 100%)" },
+
+      /* ----- Cyberpunk & Futuro ----- */
+      { id: "cyber-neon", cat: "cyber", name: "Neón Cyberpunk",
+        css: "radial-gradient(ellipse at 15% 20%, rgba(255,0,170,0.55) 0%, transparent 45%), radial-gradient(ellipse at 85% 78%, rgba(0,240,255,0.5) 0%, transparent 45%), linear-gradient(160deg, #07020F 0%, #12061F 50%, #050A18 100%)" },
+      { id: "night-city", cat: "cyber", name: "Ciudad Nocturna",
+        css: `${bgSvg(nightCitySvg())} 0 100% / 420px 220px repeat-x, radial-gradient(ellipse at 50% 100%, rgba(255,0,128,0.45) 0%, transparent 60%), linear-gradient(180deg, #03030A 0%, #160A33 60%, #3B0A4F 100%)` },
+      { id: "tron-grid", cat: "cyber", name: "Grilla Tron",
+        css: "linear-gradient(rgba(0,255,255,0.32) 1px, transparent 1px) 0 0 / 44px 44px, linear-gradient(90deg, rgba(0,255,255,0.32) 1px, transparent 1px) 0 0 / 44px 44px, radial-gradient(ellipse at 50% 50%, #0B1E3A 0%, #02040A 75%)" },
+      { id: "green-terminal", cat: "cyber", name: "Terminal Verde",
+        css: "repeating-linear-gradient(0deg, rgba(0,0,0,0.35) 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, #0B3D1E 0%, #021108 80%)" },
+      { id: "circuit-board", cat: "cyber", name: "Placa de Circuito",
+        css: `${bgSvg("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g fill='none' stroke='#22C55E' stroke-opacity='0.45' stroke-width='1.5'><path d='M0 24H36L48 36V72H84'/><path d='M60 0V18L72 30H120'/><path d='M120 84H102L90 96V120'/><path d='M0 96H24L36 108V120'/><path d='M18 48V66L30 78'/></g><g fill='#4ADE80' fill-opacity='0.6'><circle cx='84' cy='72' r='3.5'/><circle cx='36' cy='24' r='3'/><circle cx='72' cy='30' r='3'/><circle cx='90' cy='96' r='3'/><circle cx='30' cy='78' r='3.5'/><circle cx='18' cy='48' r='3'/></g></svg>")} 0 0 / 160px 160px, linear-gradient(160deg, #03150C 0%, #062A18 100%)` },
+      { id: "hologram", cat: "cyber", name: "Holograma",
+        css: "linear-gradient(160deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 45%), conic-gradient(from 210deg at 50% 50%, #A5F3FC, #C4B5FD, #F9A8D4, #FDE68A, #86EFAC, #A5F3FC)" },
+
+      /* ----- Rojo y Negro ----- */
+      { id: "rb-stripes", cat: "redblack", name: "Rayas Rojo y Negro", css: "repeating-linear-gradient(135deg, #0A0A0A 0 28px, #B91C1C 28px 56px)" },
+      { id: "carbon-red", cat: "redblack", name: "Fibra de Carbono",
+        css: "radial-gradient(ellipse at 50% 0%, rgba(220,38,38,0.38) 0%, transparent 60%), linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px / 20px 20px, linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0 / 20px 20px, linear-gradient(27deg, #222 5px, transparent 5px) 0 10px / 20px 20px, linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px / 20px 20px, linear-gradient(90deg, #1B1B1B 10px, transparent 10px) 0 0 / 20px 20px, linear-gradient(#1D1D1D 25%, #1A1A1A 25% 50%, transparent 50% 75%, #242424 75%) 0 0 / 20px 20px, #131313" },
+      { id: "emo-web", cat: "redblack", name: "Telaraña Emo",
+        css: `${bgSvg(`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><path d='${spiderWebSvgPaths(600, 0, 560, 8, 7, 90, 180)}' fill='none' stroke='#DC2626' stroke-opacity='0.55' stroke-width='1.3'/></svg>`)} 100% 0 / 600px 600px no-repeat, radial-gradient(ellipse at 100% 0%, #3B0A0A 0%, transparent 55%), #070707` },
+      { id: "rb-checker", cat: "redblack", name: "Damero Rock", css: "conic-gradient(#111111 25%, #991B1B 0 50%, #111111 0 75%, #991B1B 0) 0 0 / 64px 64px" },
+      { id: "blood-moon", cat: "redblack", name: "Luna Roja",
+        css: "radial-gradient(circle at 72% 28%, #FECACA 0 3%, #DC2626 6%, rgba(127,29,29,0.55) 12%, transparent 26%), linear-gradient(180deg, #000000 0%, #1A0505 70%, #3B0A0A 100%)" }
     ];
+
+    // Silueta de edificios con ventanitas encendidas (para "Ciudad Nocturna")
+    function nightCitySvg() {
+      // Las ventanas son un patrón repetido (así el fondo pesa poco); cada edificio tiene distinta cantidad de luces
+      let shapes = "";
+      let x = 0, i = 0;
+      while (x < 420) {
+        const w = 26 + Math.round(seeded(i) * 40);
+        const h = 60 + Math.round(seeded(i + 50) * 130);
+        const top = 220 - h;
+        shapes += `<rect x='${x}' y='${top}' width='${w - 3}' height='${h}' fill='#05040C'/>`;
+        shapes += `<rect x='${x + 3}' y='${top + 6}' width='${w - 9}' height='${h - 10}' fill='url(#${seeded(i + 99) > 0.7 ? "c" : "w"})' opacity='${(0.25 + seeded(i + 7) * 0.6).toFixed(2)}'/>`;
+        x += w;
+        i++;
+      }
+      return `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='220'><defs><pattern id='w' width='9' height='12' patternUnits='userSpaceOnUse'><rect x='2' y='3' width='4' height='5' fill='#FDE68A'/></pattern><pattern id='c' width='9' height='12' patternUnits='userSpaceOnUse'><rect x='2' y='3' width='4' height='5' fill='#22D3EE'/></pattern></defs>${shapes}</svg>`;
+    }
 
     function buildCustomBgGradient(c1, c2, c3, style) {
       switch (style) {
@@ -1195,8 +1317,86 @@
         case "aurora-radial": return `radial-gradient(circle at 25% 25%, ${c2} 0%, ${c3} 48%, ${c1} 95%)`;
         case "mesh-soft": return `radial-gradient(at 15% 15%, ${c2} 0px, transparent 55%), radial-gradient(at 85% 80%, ${c3} 0px, transparent 55%), ${c1}`;
         case "sunset-wave": return `linear-gradient(180deg, ${c1} 0%, ${c2} 55%, ${c3} 100%)`;
+        // Fibra de carbono (Color 1 = base oscura, Color 2 = brillo de arriba)
+        case "carbon":
+          return `radial-gradient(ellipse at 50% 0%, ${c2}66 0%, transparent 60%), linear-gradient(27deg, rgba(0,0,0,0.35) 5px, transparent 5px) 0 5px / 20px 20px, linear-gradient(207deg, rgba(0,0,0,0.35) 5px, transparent 5px) 10px 0 / 20px 20px, linear-gradient(27deg, rgba(255,255,255,0.06) 5px, transparent 5px) 0 10px / 20px 20px, linear-gradient(207deg, rgba(255,255,255,0.06) 5px, transparent 5px) 10px 5px / 20px 20px, linear-gradient(90deg, rgba(0,0,0,0.25) 10px, transparent 10px) 0 0 / 20px 20px, ${c1}`;
+        // Telaraña (Color 1 = fondo, Color 2 = brillo de la esquina, Color 3 = hilos)
+        case "web":
+          return `${bgSvg(`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><path d='${spiderWebSvgPaths(600, 0, 560, 8, 7, 90, 180)}' fill='none' stroke='${c3}' stroke-opacity='0.6' stroke-width='1.3'/></svg>`)} 100% 0 / 600px 600px no-repeat, radial-gradient(ellipse at 100% 0%, ${c2}88 0%, transparent 55%), ${c1}`;
+        // Atardecer Vaporwave (Color 1 = cielo, Color 2 = sol, Color 3 = grilla)
+        case "vapor-grid":
+          return `repeating-linear-gradient(0deg, ${c3}cc 0 2px, transparent 2px 36px) 0 100% / 100% 36% no-repeat, repeating-linear-gradient(90deg, ${c3}cc 0 2px, transparent 2px 70px) 0 100% / 100% 36% no-repeat, linear-gradient(${c1}, ${c1}) 0 100% / 100% 36% no-repeat, radial-gradient(circle at 50% 64%, ${c2} 0 12%, transparent 16.5%), linear-gradient(180deg, ${c1} 0%, ${c3} 64%)`;
+        // Burbujas Frutiger (Color 1 y 2 = cielo, Color 3 = tinte de burbujas)
+        case "bubbles":
+          return `${bgSvg(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><defs><radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='#fff' stop-opacity='0.95'/><stop offset='0.4' stop-color='${c3}' stop-opacity='0.25'/><stop offset='1' stop-color='${c3}' stop-opacity='0.12'/></radialGradient></defs><g fill='url(#b)' stroke='#fff' stroke-opacity='0.7'><circle cx='46' cy='52' r='26'/><circle cx='150' cy='34' r='12'/><circle cx='138' cy='140' r='34'/><circle cx='36' cy='160' r='10'/></g></svg>`)} 0 0 / 260px 260px, linear-gradient(160deg, ${c1} 0%, ${c2} 100%)`;
+        // Cromo metálico en bandas con tus 3 colores
+        case "chrome":
+          return `linear-gradient(180deg, rgba(255,255,255,0.7) 0%, transparent 12%, rgba(255,255,255,0.5) 30%, transparent 40%, rgba(255,255,255,0.35) 62%, transparent 75%), linear-gradient(180deg, ${c1} 0%, ${c2} 22%, ${c1} 34%, ${c3} 50%, ${c2} 64%, ${c3} 80%, ${c1} 100%)`;
+        // Cielo con estrellas (Color 3 = estrellas)
+        case "stars":
+          return `radial-gradient(${c3} 1.2px, transparent 1.8px) 0 0 / 42px 42px, radial-gradient(${c3}99 1px, transparent 1.6px) 21px 21px / 42px 42px, linear-gradient(180deg, ${c1} 0%, ${c2} 100%)`;
+        // Pantalla CRT con brillo de neón (Color 3)
+        case "scanlines":
+          return `repeating-linear-gradient(0deg, rgba(0,0,0,0.3) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 40%, ${c3}66 0%, transparent 60%), linear-gradient(180deg, ${c1} 0%, ${c2} 100%)`;
+        // Zigzag (Color 1 y 2)
+        case "zigzag":
+          return `linear-gradient(135deg, ${c1} 25%, transparent 25%) -24px 0 / 48px 48px, linear-gradient(225deg, ${c1} 25%, transparent 25%) -24px 0 / 48px 48px, linear-gradient(315deg, ${c1} 25%, transparent 25%) 0 0 / 48px 48px, linear-gradient(45deg, ${c1} 25%, ${c2} 25%) 0 0 / 48px 48px`;
+        // Rombos tipo media de lana (Color 1 = fondo, 2 = rombos, 3 = líneas)
+        case "argyle":
+          return `repeating-linear-gradient(120deg, ${c3}88 0 1px, transparent 1px 60px), repeating-linear-gradient(60deg, ${c3}88 0 1px, transparent 1px 60px), linear-gradient(60deg, ${c2} 25%, transparent 25% 75%, ${c2} 75%) 0 0 / 70px 120px, linear-gradient(120deg, ${c2} 25%, transparent 25% 75%, ${c2} 75%) 0 0 / 70px 120px, ${c1}`;
+        // Neón en las esquinas (Color 1 = fondo, 2 y 3 = luces)
+        case "neon-corners":
+          return `radial-gradient(ellipse at 0% 0%, ${c2}aa 0%, transparent 50%), radial-gradient(ellipse at 100% 100%, ${c3}aa 0%, transparent 50%), ${c1}`;
+        // Rayas de corredor (Color 1 = fondo, 2 = rayas anchas, 3 = filete)
+        case "racing":
+          return `linear-gradient(90deg, transparent 0 40%, ${c2} 40% 46%, ${c3} 46% 47%, transparent 47% 53%, ${c3} 53% 54%, ${c2} 54% 60%, transparent 60%), ${c1}`;
         default: return `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`;
       }
+    }
+
+    /* ---------- Ayudantes para dibujar patrones en SVG ---------- */
+
+    // Número "aleatorio" fijo a partir de un índice (siempre da lo mismo, así el patrón no cambia)
+    function seeded(i) {
+      const x = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    }
+
+    // SVG listo para usar como fondo de página (sin comillas, para que sea un fondo "seguro")
+    function bgSvg(svg) {
+      return `url(data:image/svg+xml,${encodeURIComponent(svg).replace(/[()']/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase())})`;
+    }
+
+    // Telaraña: rayos desde un punto + anillos que cuelgan entre los rayos
+    function spiderWebSvgPaths(cx, cy, radius, spokes, rings, fromDeg, toDeg) {
+      const angles = Array.from({ length: spokes }, (_, i) => (fromDeg + (toDeg - fromDeg) * i / (spokes - 1)) * Math.PI / 180);
+      let d = angles.map(a => `M${cx} ${cy}L${(cx + Math.cos(a) * radius).toFixed(1)} ${(cy + Math.sin(a) * radius).toFixed(1)}`).join("");
+      for (let r = 1; r <= rings; r++) {
+        const rr = radius * r / (rings + 0.4);
+        angles.forEach((a, i) => {
+          const x = (cx + Math.cos(a) * rr).toFixed(1), y = (cy + Math.sin(a) * rr).toFixed(1);
+          if (i === 0) { d += `M${x} ${y}`; return; }
+          const mid = (a + angles[i - 1]) / 2, sag = rr * 0.86;
+          d += `Q${(cx + Math.cos(mid) * sag).toFixed(1)} ${(cy + Math.sin(mid) * sag).toFixed(1)} ${x} ${y}`;
+        });
+      }
+      return d;
+    }
+
+    // Curvas de nivel (mapa topográfico): anillos ondulados uno dentro de otro
+    function topoSvgPaths(cx, cy, maxR, rings, seed) {
+      let d = "";
+      for (let k = 1; k <= rings; k++) {
+        const r = maxR * k / rings;
+        const pts = [];
+        for (let s = 0; s <= 48; s++) {
+          const a = s / 48 * Math.PI * 2;
+          const wob = 1 + 0.16 * Math.sin(a * 3 + seed + k * 0.5) + 0.08 * Math.sin(a * 5 + seed * 2);
+          pts.push(`${(cx + Math.cos(a) * r * wob).toFixed(1)} ${(cy + Math.sin(a) * r * wob * 0.8).toFixed(1)}`);
+        }
+        d += `M${pts.join("L")}Z`;
+      }
+      return d;
     }
 
     function generateBoxStyle(design) {
@@ -1214,8 +1414,119 @@
       const svgUrl = svg => `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, "%27")}')`;
       const svgPattern = (svg, tileW, tileH = tileW) =>
         `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: ${tileW}px ${tileH}px, 100% 100%;`;
+      // SVG que cubre toda la tapa (no se repite)
+      const svgCover = svg =>
+        `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: cover, 100% 100%; background-position: center, 0 0; background-repeat: no-repeat;`;
+      const op = k => Math.min(1, opacity * k).toFixed(2);   // opacidad para usar dentro de los SVG
 
       if (pattern === "smooth") return `background: ${baseGrad};`;
+
+      /* ----- Vaporwave & Frutiger ----- */
+      if (pattern === "frutiger") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><defs><radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='#fff' stop-opacity='${op(2)}'/><stop offset='0.4' stop-color='#fff' stop-opacity='${op(0.5)}'/><stop offset='1' stop-color='#fff' stop-opacity='${op(0.15)}'/></radialGradient></defs><g fill='url(#b)' stroke='#fff' stroke-opacity='${op(1.4)}' stroke-width='1'><circle cx='30' cy='34' r='18'/><circle cx='92' cy='22' r='8'/><circle cx='86' cy='84' r='24'/><circle cx='22' cy='96' r='7'/></g></svg>`;
+        const tile = Math.max(70, Math.round(scale * 2));
+        return `background-image: linear-gradient(180deg, ${w(1.6)} 0%, ${w(0.6)} 46%, transparent 47%), ${svgUrl(svg)}, ${baseGrad}; background-size: 100% 100%, ${tile}px ${tile}px, 100% 100%;`;
+      }
+      if (pattern === "vaporsun") {
+        const lines = [104, 112, 119, 125, 130].map(y => `<rect x='0' y='${y}' width='200' height='${(y - 98) / 5}' fill='black'/>`).join("");
+        const verticals = Array.from({ length: 11 }, (_, i) => `<line x1='100' y1='128' x2='${-150 + i * 50}' y2='175'/>`).join("");
+        const horizontals = [132, 138, 146, 157, 172].map(y => `<line x1='0' y1='${y}' x2='200' y2='${y}'/>`).join("");
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='175' viewBox='0 0 200 175' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#FFE66D'/><stop offset='1' stop-color='${c3}'/></linearGradient><mask id='m'><rect width='200' height='175' fill='white'/>${lines}</mask></defs><circle cx='100' cy='88' r='${30 + scale / 5}' fill='url(#s)' mask='url(#m)' opacity='${op(2.2)}'/><rect x='0' y='128' width='200' height='47' fill='#000' fill-opacity='${op(0.9)}'/><g stroke='${c3}' stroke-opacity='${op(2)}' stroke-width='1'>${verticals}${horizontals}</g></svg>`;
+        return svgCover(svg);
+      }
+      if (pattern === "holo") {
+        const a = op(0.9);
+        return `background: linear-gradient(170deg, ${w(1.2)} 0%, transparent 40%), repeating-linear-gradient(${115 + scale}deg, rgba(255,0,170,${a}) 0%, rgba(0,210,255,${a}) 7%, rgba(120,255,150,${a}) 14%, rgba(255,240,90,${a}) 21%, rgba(255,0,170,${a}) 28%), ${baseGrad};`;
+      }
+      if (pattern === "bokeh") {
+        const spots = [[18, 22, 16], [72, 30, 10], [48, 70, 20], [86, 78, 8], [30, 88, 9], [62, 12, 6]];
+        const layers = spots.map(([x, y, r], i) => `radial-gradient(circle at ${x}% ${y}%, ${i % 2 ? w(1.1) : c3 + "aa"} 0%, transparent ${r + scale / 10}%)`).join(", ");
+        return `background: ${layers}, ${baseGrad};`;
+      }
+
+      /* ----- Internet viejo / Y2K ----- */
+      if (pattern === "chrome") {
+        return `background: linear-gradient(180deg, ${w(1.6)} 0%, ${d(0.5)} 20%, ${w(1.3)} 36%, ${d(0.8)} 52%, ${w(0.9)} 66%, ${d(0.4)} 84%, ${w(1.1)} 100%), ${baseGrad};`;
+      }
+      if (pattern === "win98") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='245' viewBox='0 0 280 245' preserveAspectRatio='none'><defs><linearGradient id='t' x1='0' x2='1'><stop offset='0' stop-color='#000080'/><stop offset='1' stop-color='${c3}'/></linearGradient></defs><g opacity='${op(2)}'><path d='M1 244V1H279' fill='none' stroke='#fff' stroke-width='3'/><path d='M1 244H279V1' fill='none' stroke='#000' stroke-width='3'/><rect x='30' y='8' width='242' height='20' fill='url(#t)'/><g fill='#C0C0C0' stroke='#000' stroke-width='1'><rect x='216' y='11' width='16' height='14'/><rect x='234' y='11' width='16' height='14'/><rect x='252' y='11' width='16' height='14'/></g><path d='M220 21h8M238 22v-8h8v8z' stroke='#000' fill='none' stroke-width='1.5'/><path d='M256 14l8 8M264 14l-8 8' stroke='#000' stroke-width='1.5'/></g></svg>`;
+        return svgCover(svg);
+      }
+      if (pattern === "pixel") {
+        let rects = "";
+        for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+            const v = seeded(x * 31 + y * 17);
+            if (v > 0.55) rects += `<rect x='${x * 4}' y='${y * 4}' width='4' height='4' fill='${v > 0.8 ? "#fff" : "#000"}' fill-opacity='${op(v > 0.8 ? 1.1 : 0.8)}'/>`;
+          }
+        }
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' shape-rendering='crispEdges'>${rects}</svg>`;
+        const tile = Math.max(24, Math.round(scale * 0.9));
+        return svgPattern(svg, tile) + " image-rendering: pixelated;";
+      }
+      if (pattern === "memphis") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' opacity='${op(2)}'><path d='M8 30 q8 -12 16 0 t16 0 t16 0' fill='none' stroke='${c3}' stroke-width='4' stroke-linecap='round'/><path d='M78 12 l18 30 h-36 z' fill='none' stroke='#fff' stroke-width='3'/><circle cx='30' cy='86' r='12' fill='${c3}'/><circle cx='96' cy='92' r='14' fill='none' stroke='#000' stroke-width='3'/><g fill='#fff'><circle cx='62' cy='64' r='2.5'/><circle cx='70' cy='64' r='2.5'/><circle cx='78' cy='64' r='2.5'/><circle cx='62' cy='72' r='2.5'/><circle cx='70' cy='72' r='2.5'/><circle cx='78' cy='72' r='2.5'/></g><path d='M6 112 l8 -8 l8 8 l8 -8 l8 8' fill='none' stroke='#000' stroke-width='3'/></svg>`;
+        const tile = Math.max(80, Math.round(scale * 2.2));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "hearts") {
+        const heart = (x, y, s, fill) => `<path transform='translate(${x} ${y}) scale(${s})' d='M10 18 C3 13 0 9 2 5 C4 1 9 1 10 5 C11 1 16 1 18 5 C20 9 17 13 10 18 Z' fill='${fill}'/>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' opacity='${op(2)}'>${heart(6, 8, 1.1, "#fff")}${heart(46, 4, 0.7, c3)}${heart(36, 42, 1.4, c3)}${heart(8, 56, 0.6, "#fff")}${heart(64, 60, 0.8, "#fff")}</svg>`;
+        const tile = Math.max(50, Math.round(scale * 1.4));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "zebra") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='#000' fill-opacity='${op(1.8)}'><path d='M0 10 C30 0 50 26 80 14 S120 18 120 18 V30 C90 36 70 20 40 30 S0 26 0 26 Z'/><path d='M0 52 C24 44 46 64 76 54 S120 60 120 60 V70 C96 76 72 62 46 72 S0 66 0 66 Z'/><path d='M0 92 C30 86 52 104 82 94 S120 98 120 98 V110 C92 118 66 100 38 110 S0 106 0 106 Z'/></svg>`;
+        const tile = Math.max(70, Math.round(scale * 2));
+        return svgPattern(svg, tile);
+      }
+
+      /* ----- Cyberpunk & Futuro ----- */
+      if (pattern === "glitch") {
+        const a = c3 + "cc", b = c2 + "bb";
+        return `background: linear-gradient(transparent 0 16%, ${a} 16% 19%, transparent 19% 44%, ${b} 44% 46%, transparent 46% 68%, ${w(1.4)} 68% 69%, transparent 69% 83%, ${a} 83% 84.5%, transparent 84.5%) ${Math.round(scale / 6)}px 0 / 100% 100% no-repeat, linear-gradient(transparent 0 30%, ${b} 30% 31.5%, transparent 31.5% 58%, ${a} 58% 61%, transparent 61%) -${Math.round(scale / 8)}px 0 / 100% 100% no-repeat, repeating-linear-gradient(0deg, ${d(0.5)} 0 1px, transparent 1px 3px), ${baseGrad};`;
+      }
+      if (pattern === "circuit") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><g fill='none' stroke='${c3}' stroke-opacity='${op(2)}' stroke-width='1.6'><path d='M0 20 H30 L40 30 V60 H70'/><path d='M50 0 V15 L60 25 H100'/><path d='M100 70 H85 L75 80 V100'/><path d='M0 80 H20 L30 90 V100'/><path d='M15 40 V55 L25 65'/></g><g fill='${c3}' fill-opacity='${op(2.2)}'><circle cx='70' cy='60' r='3'/><circle cx='30' cy='20' r='2.5'/><circle cx='60' cy='25' r='2.5'/><circle cx='75' cy='80' r='2.5'/><circle cx='25' cy='65' r='3'/><circle cx='15' cy='40' r='2.5'/></g></svg>`;
+        const tile = Math.max(60, Math.round(scale * 1.8));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "honeycomb") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='56' height='98' viewBox='0 0 56 98'><path d='M28 66 L0 50 L0 16 L28 0 L56 16 L56 50 L28 66 L28 98 M28 0 L28 -34 M0 50 L-28 66 M56 50 L84 66' fill='none' stroke='${w(1.4)}' stroke-width='1.5'/></svg>`;
+        const tileW = Math.max(28, Math.round(scale * 0.8));
+        return svgPattern(svg, tileW, Math.round(tileW * 1.75));
+      }
+      if (pattern === "equalizer") {
+        const bars = Array.from({ length: 18 }, (_, i) => {
+          const h = 30 + seeded(i + 3) * 120;
+          return `<rect x='${8 + i * 15}' y='${245 - h}' width='10' height='${h.toFixed(0)}' rx='2' fill='url(#e)'/>`;
+        }).join("");
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='245' viewBox='0 0 280 245' preserveAspectRatio='none'><defs><linearGradient id='e' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='${c3}' stop-opacity='${op(2)}'/><stop offset='1' stop-color='#fff' stop-opacity='${op(1.2)}'/></linearGradient></defs>${bars}</svg>`;
+        return svgCover(svg);
+      }
+      if (pattern === "topo") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'><path d='${topoSvgPaths(60, 70, 90, 7, 1.3)}${topoSvgPaths(170, 170, 60, 5, 4.1)}' fill='none' stroke='${w(1.4)}' stroke-width='1.2'/></svg>`;
+        const tile = Math.max(120, Math.round(scale * 3.2));
+        return svgPattern(svg, tile);
+      }
+
+      /* ----- Rojo y Negro / Rock ----- */
+      if (pattern === "carbon") {
+        return `background-image: linear-gradient(27deg, ${d(1.4)} 5px, transparent 5px), linear-gradient(207deg, ${d(1.4)} 5px, transparent 5px), linear-gradient(27deg, ${w(0.3)} 5px, transparent 5px), linear-gradient(207deg, ${w(0.3)} 5px, transparent 5px), linear-gradient(90deg, ${d(0.9)} 10px, transparent 10px), ${baseGrad}; background-size: 20px 20px, 20px 20px, 20px 20px, 20px 20px, 20px 20px, 100% 100%; background-position: 0 5px, 10px 0, 0 10px, 10px 5px, 0 0, 0 0;`;
+      }
+      if (pattern === "racing") {
+        const cell = Math.max(8, Math.round(scale / 4));
+        return `background: conic-gradient(${w(2)} 25%, ${d(2)} 0 50%, ${w(2)} 0 75%, ${d(2)} 0) 0 100% / ${cell * 2}px ${cell * 2}px repeat-x, linear-gradient(90deg, transparent 0 58%, ${w(1.6)} 58% 63%, transparent 63% 67%, ${w(1.6)} 67% 72%, transparent 72%), ${baseGrad};`;
+      }
+      if (pattern === "flames") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='60' height='90' viewBox='0 0 60 90'><defs><linearGradient id='f' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='#FFE066'/><stop offset='0.45' stop-color='${c3}'/><stop offset='1' stop-color='${c3}' stop-opacity='0'/></linearGradient></defs><path d='M30 90 C8 82 4 62 16 48 C17 60 24 63 24 63 C19 44 28 24 40 10 C37 32 54 40 51 62 C57 56 57 48 57 48 C64 68 54 88 30 90 Z' fill='url(#f)' opacity='${op(2.2)}'/></svg>`;
+        const tile = Math.max(40, Math.round(scale * 1.1));
+        return `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: ${tile}px ${Math.round(tile * 1.5)}px, 100% 100%; background-position: 0 100%, 0 0; background-repeat: repeat-x, no-repeat;`;
+      }
+      if (pattern === "spiderweb") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='245' viewBox='0 0 280 245' preserveAspectRatio='xMidYMid slice'><path d='${spiderWebSvgPaths(280, 0, 230, 7, 6, 90, 180)}' fill='none' stroke='${w(1.8)}' stroke-width='1'/></svg>`;
+        return svgCover(svg);
+      }
       if (pattern === "aurora") {
         return `background: radial-gradient(ellipse at 15% 20%, ${c3} 0%, transparent ${30 + scale / 3}%), radial-gradient(ellipse at 85% 85%, ${c2} 0%, transparent ${35 + scale / 3}%), radial-gradient(circle at 70% 15%, ${w(0.6)} 0%, transparent 30%), ${c1};`;
       }
@@ -1489,6 +1800,13 @@
     // Fondos de fábrica que van en "Oscuros" (el resto va en "Claros")
     const DARK_PRESET_IDS = ["cyber-dusk", "rock-night", "synthwave", "vinyl-grooves", "deep-forest", "starry"];
 
+    // Categoría de fábrica de un fondo: la que trae en BG_PRESETS (cat) o Claros/Oscuros
+    function defaultPresetCat(id) {
+      const preset = BG_PRESETS.find(p => p.id === id);
+      if (preset && preset.cat) return preset.cat;
+      return DARK_PRESET_IDS.includes(id) ? "dark" : "light";
+    }
+
     function hasGhApi() {
       const cfg = getGhConfig();
       return Boolean(cfg && cfg.owner && cfg.repo && cfg.token);
@@ -1496,7 +1814,7 @@
 
     // Solo aceptamos CSS de fondo válido y sin caracteres peligrosos
     function isSafeBgCss(css) {
-      return typeof css === "string" && css.length > 0 && css.length < 3000 &&
+      return typeof css === "string" && css.length > 0 && css.length < 6000 &&
         !/[<>"';{}\\]/.test(css) && CSS.supports("background", css);
     }
 
@@ -1585,7 +1903,7 @@
       if (entry.kind === "preset") {
         const moved = draftPresetCats[entry.id];
         if (moved && draftBgCategories.some(c => c.id === moved)) return moved;
-        return DARK_PRESET_IDS.includes(entry.id) ? "dark" : "light";
+        return defaultPresetCat(entry.id);
       }
       if (entry.cat && draftBgCategories.some(c => c.id === entry.cat)) return entry.cat;
       return estimateBgLuminance(entry.css) < 0.55 ? "dark" : "light";
@@ -1729,7 +2047,7 @@
       if (!entry || entry.kind === "local" || bgCategoryOf(entry) === catId) return;
       if (entry.kind === "preset") {
         const next = { ...draftPresetCats };
-        const defaultCat = DARK_PRESET_IDS.includes(id) ? "dark" : "light";
+        const defaultCat = defaultPresetCat(id);
         if (catId === defaultCat) delete next[id]; else next[id] = catId;
         draftPresetCats = next;
       } else {
