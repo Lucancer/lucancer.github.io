@@ -307,6 +307,41 @@
         </button>
       </div>
 
+      <!-- Botón Disco: cambia entre la Estantería de Pochincho y "Mi estantería" -->
+      <div class="relative group">
+        <button
+          id="shelfToggleBtn"
+          type="button"
+          class="glass-pill w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 transition"
+          aria-label="Cambiar de estantería"
+        >
+          <svg class="w-7 h-7 transition-transform duration-700 group-hover:rotate-180" viewBox="0 0 24 24">
+            <defs>
+              <linearGradient id="discGradOwner" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#94a3b8" />
+                <stop offset="45%" stop-color="#e2e8f0" />
+                <stop offset="100%" stop-color="#64748b" />
+              </linearGradient>
+              <linearGradient id="discGradMine" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f472b6" />
+                <stop offset="35%" stop-color="#fde68a" />
+                <stop offset="65%" stop-color="#6ee7b7" />
+                <stop offset="100%" stop-color="#818cf8" />
+              </linearGradient>
+            </defs>
+            <circle id="shelfDiscFace" cx="12" cy="12" r="10.5" fill="url(#discGradOwner)" stroke="rgba(15,23,42,0.35)" stroke-width="0.8" />
+            <path d="M6.2 8.5a7 7 0 0 1 4-3.6" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.1" stroke-linecap="round" />
+            <circle cx="12" cy="12" r="3.6" fill="rgba(255,255,255,0.85)" stroke="rgba(15,23,42,0.25)" stroke-width="0.6" />
+            <circle cx="12" cy="12" r="1.4" fill="#F5EFE6" stroke="rgba(15,23,42,0.35)" stroke-width="0.5" />
+          </svg>
+        </button>
+        <!-- Cartelito al pasar el mouse -->
+        <div class="pointer-events-none absolute top-full right-0 mt-2 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition glass-pill rounded-xl px-3 py-1.5 whitespace-nowrap text-right z-50">
+          <p id="shelfTooltipTitle" class="text-xs font-semibold text-slate-800">Estantería de Pochincho</p>
+          <p id="shelfTooltipHint" class="text-[10px] text-slate-500">Tocá para ver Mi estantería</p>
+        </div>
+      </div>
+
       <!-- Botón GitHub API -->
       <button
         id="githubConfigBtn"
@@ -338,6 +373,17 @@
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+        </svg>
+      </button>
+
+      <!-- Botón Copia de seguridad (solo en "Mi estantería") -->
+      <button
+        id="backupBtn"
+        class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-sky-700 hover:scale-105 transition"
+        title="Copia de seguridad de Mi estantería"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 10l5 5 5-5M12 15V3M5 21h14"></path>
         </svg>
       </button>
 
@@ -428,6 +474,25 @@
       </div>
     </div>
 
+    <!-- POPOVER COPIA DE SEGURIDAD (Mi estantería) -->
+    <div id="backupPopover" class="hidden glass-pill rounded-2xl p-4 w-72 shadow-xl space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-slate-700">Copia de seguridad</span>
+        <span id="myShelfCount" class="text-[10px] mono text-slate-400"></span>
+      </div>
+      <p class="text-[11px] text-slate-500 leading-relaxed">
+        Tu estantería se guarda solo en este navegador. Descargá una copia para no perderla o para pasarla a otra PC o al celular.
+      </p>
+      <button id="exportShelfBtn" type="button" class="w-full py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
+        Descargar copia (.json)
+      </button>
+      <button id="importShelfBtn" type="button" class="w-full py-1.5 rounded-xl bg-slate-200/80 text-slate-700 text-xs font-medium hover:bg-slate-300/80 transition">
+        Cargar una copia
+      </button>
+      <p class="text-[10px] text-slate-400">Al cargar una copia, sus discos se suman a los que ya tenés.</p>
+      <input id="importShelfInput" type="file" accept=".json,application/json" class="hidden" />
+    </div>
+
     <!-- POPOVER PINCEL -->
     <div id="brushPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl overflow-y-auto" style="max-height: calc(100vh - 6rem);">
       <div class="flex items-center justify-between mb-1">
@@ -512,7 +577,8 @@
     <div id="cdGrid" class="flex flex-wrap items-center justify-center sm:justify-start gap-y-10 gap-x-6"></div>
 
     <div id="emptyState" class="hidden text-center py-24">
-      <p class="text-base font-medium text-slate-500">No se encontraron discos con ese criterio.</p>
+      <p id="emptyStateText" class="text-base font-medium text-slate-500">No se encontraron discos con ese criterio.</p>
+      <p id="emptyStateHint" class="hidden text-sm text-slate-500 mt-1"></p>
       <button id="resetFiltersBtn" class="mt-3 px-4 py-1.5 rounded-full text-xs bg-slate-800 text-white hover:bg-slate-700 transition">
         Mostrar todos los CDs
       </button>
@@ -766,7 +832,11 @@
     const STORAGE_BG_KEY = "cd_bookmarks_bg_v3";
     const STORAGE_BG_LIBRARY_KEY = "cd_bookmarks_bg_library_v1";
 
+    // "cds" es la lista que se está mostrando. "ownerCds" es la Estantería de Pochincho
+    // (cds.json en GitHub) y "myCds" es "Mi estantería" de cada visitante (en su navegador).
     let cds = [];
+    let ownerCds = [];
+    let myCds = [];
     let currentBg = "linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%)";
     // Fondos creados por el dueño y fondos de la lista que el dueño borró (guardados en cds.json)
     let savedCustomBgs = [];
@@ -856,13 +926,13 @@
         const res = await fetchCdsJson();
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data.cds)) cds = data.cds;
+          if (Array.isArray(data.cds)) ownerCds = data.cds;
           if (data.bg) {
             currentBg = data.bg;
             document.documentElement.style.setProperty("--bg-gradient", currentBg);
           }
           applyBgLibrary(data);
-          localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
+          localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(ownerCds));
           localStorage.setItem(STORAGE_BG_KEY, currentBg);
           saveBgLibraryLocally();
           return;
@@ -872,7 +942,7 @@
       }
 
       const savedCds = localStorage.getItem(STORAGE_CDS_KEY);
-      if (savedCds) cds = JSON.parse(savedCds);
+      if (savedCds) ownerCds = JSON.parse(savedCds);
       const savedBg = localStorage.getItem(STORAGE_BG_KEY);
       if (savedBg) {
         currentBg = savedBg;
@@ -888,7 +958,7 @@
     let syncQueue = Promise.resolve();
 
     function syncToGitHub() {
-      localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
+      localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(ownerCds));
       localStorage.setItem(STORAGE_BG_KEY, currentBg);
       saveBgLibraryLocally();
 
@@ -937,7 +1007,7 @@
           throw new Error(`GET ${getRes.status}`);
         }
 
-        const payloadObj = { bg: currentBg, bgCategories: savedBgCategories, presetCats: savedPresetCats, customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, cds: cds };
+        const payloadObj = { bg: currentBg, bgCategories: savedBgCategories, presetCats: savedPresetCats, customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, cds: ownerCds };
         const jsonString = JSON.stringify(payloadObj, null, 2);
         const utf8Bytes = new TextEncoder().encode(jsonString);
         let binaryStr = "";
@@ -1198,6 +1268,15 @@
 
       if (filtered.length === 0) {
         grid.innerHTML = "";
+        const shelfEmpty = cds.length === 0;
+        const mine = shelfMode === "mine";
+        document.getElementById("emptyStateText").textContent = shelfEmpty
+          ? (mine ? "Tu estantería está vacía." : "Todavía no hay discos en esta estantería.")
+          : "No se encontraron discos con ese criterio.";
+        const hint = document.getElementById("emptyStateHint");
+        hint.textContent = "Tocá el + de arriba para agregar tu primer disco. ¿Te gustó algún link de Pochincho? Abrilo y copialo acá.";
+        hint.classList.toggle("hidden", !(shelfEmpty && mine));
+        document.getElementById("resetFiltersBtn").classList.toggle("hidden", shelfEmpty);
         emptyState.classList.remove("hidden");
         return;
       }
@@ -1225,7 +1304,7 @@
               <div class="flex-1 p-4 flex flex-col justify-between relative z-10 overflow-hidden">
                 <div class="flex items-start justify-between gap-2">
                   <span class="mono text-[10px] font-bold tracking-widest px-2 py-0.5 rounded bg-black/25">TRK #${trackNum}</span>
-                  ${isOwnerMode ? `
+                  ${canEditCurrentShelf() ? `
                     <div class="flex items-center gap-1 z-30" onclick="event.preventDefault(); event.stopPropagation()" onauxclick="event.preventDefault(); event.stopPropagation()">
                       <button onclick="openEditCdModal('${cd.id}')" class="w-7 h-7 rounded-lg bg-black/45 hover:bg-black/70 text-white flex items-center justify-center">✎</button>
                       <button onclick="deleteCd('${cd.id}')" class="w-7 h-7 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white flex items-center justify-center">✕</button>
@@ -1857,7 +1936,7 @@
     }
 
     function openNewCdModal() {
-      if (!isOwnerMode) return;
+      if (!canEditCurrentShelf()) return;
       document.getElementById("modalTitle").textContent = "Crear Nuevo CD";
       document.getElementById("editCdId").value = "";
       document.getElementById("cdTitleInput").value = "";
@@ -1874,7 +1953,7 @@
     }
 
     function openEditCdModal(id) {
-      if (!isOwnerMode) return;
+      if (!canEditCurrentShelf()) return;
       const item = cds.find(c => c.id === id);
       if (!item) return;
       document.getElementById("modalTitle").textContent = "Editar CD";
@@ -1903,11 +1982,179 @@
     }
 
     function deleteCd(id) {
-      if (!isOwnerMode) return;
+      if (!canEditCurrentShelf()) return;
       cds = cds.filter(c => c.id !== id);
       renderSearchDropdownFilters();
       renderShelf();
-      syncToGitHub();
+      persistCds();
+      updateShelfUI();
+    }
+
+    /*************************************************************************
+     * DOS ESTANTERÍAS: "Estantería de Pochincho" y "Mi estantería"
+     * - La de Pochincho es pública (cds.json); solo el dueño la edita.
+     * - "Mi estantería" es de cada visitante y se guarda en su navegador.
+     *************************************************************************/
+    const MY_SHELF_KEY = "cd_my_shelf_v1";
+    const SHELF_MODE_KEY = "cd_shelf_mode_v1";
+    let shelfMode = "owner";   // "owner" = Pochincho, "mine" = Mi estantería
+
+    function canEditCurrentShelf() {
+      return shelfMode === "mine" || isOwnerMode;
+    }
+
+    function getStoredShelfMode() {
+      try {
+        return localStorage.getItem(SHELF_MODE_KEY) === "mine" ? "mine" : "owner";
+      } catch {
+        return "owner";
+      }
+    }
+
+    // Limpia un disco (sobre todo los que vienen de una copia importada) para que no rompa la página
+    const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+    const cleanTag = (s, max) => (typeof s === "string" ? s : "").replace(/[<>"'`\\]/g, "").trim().slice(0, max);
+    const clampNum = (n, min, max, def) => (Number.isFinite(Number(n)) ? Math.min(max, Math.max(min, Number(n))) : def);
+
+    function isSafeImgSrc(s) {
+      return /^https?:\/\/[^\s"'<>\\]+$/i.test(s) ||
+        /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(s);
+    }
+
+    function sanitizeCd(c) {
+      if (!c || typeof c !== "object") return null;
+      const url = typeof c.url === "string" ? c.url.trim() : "";
+      if (safeLinkUrl(url) === "#") return null;
+      const d = c.design && typeof c.design === "object" ? c.design : {};
+      const patterns = [...document.querySelectorAll("#boxPatternSelect option")].map(o => o.value);
+      const img = typeof c.img === "string" ? c.img.trim() : "";
+      return {
+        id: typeof c.id === "string" && /^[\w-]+$/.test(c.id) ? c.id : `cd-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        title: (typeof c.title === "string" ? c.title : "").trim().slice(0, 120) || cleanDomain(url),
+        category: cleanTag(c.category, 40) || "General",
+        url,
+        img: isSafeImgSrc(img) ? img : "",
+        desc: (typeof c.desc === "string" ? c.desc : "").slice(0, 300),
+        keywords: Array.isArray(c.keywords) ? c.keywords.map(k => cleanTag(k, 30)).filter(Boolean).slice(0, 20) : [],
+        design: {
+          c1: HEX_COLOR.test(d.c1) ? d.c1 : "#1e1b4b",
+          c2: HEX_COLOR.test(d.c2) ? d.c2 : "#4338ca",
+          c3: HEX_COLOR.test(d.c3) ? d.c3 : "#ec4899",
+          pattern: patterns.includes(d.pattern) ? d.pattern : "prism",
+          scale: clampNum(d.scale, 15, 100, 50),
+          opacity: clampNum(d.opacity, 10, 90, 45),
+          textColor: HEX_COLOR.test(d.textColor) ? d.textColor : "#ffffff"
+        }
+      };
+    }
+
+    function loadMyCds() {
+      try {
+        const list = JSON.parse(localStorage.getItem(MY_SHELF_KEY)) || [];
+        return Array.isArray(list) ? list.map(sanitizeCd).filter(Boolean) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveMyCds() {
+      try {
+        localStorage.setItem(MY_SHELF_KEY, JSON.stringify(myCds));
+        return true;
+      } catch {
+        showToast("No queda espacio en tu navegador. Probá usar links de imágenes en vez de subirlas.", true);
+        return false;
+      }
+    }
+
+    // Guarda la estantería que se está mostrando donde corresponde
+    function persistCds() {
+      if (shelfMode === "mine") {
+        myCds = cds;
+        if (saveMyCds()) showToast("Guardado en Mi estantería (en este navegador)");
+      } else {
+        ownerCds = cds;
+        syncToGitHub();
+      }
+    }
+
+    function updateShelfUI() {
+      const mine = shelfMode === "mine";
+      document.getElementById("shelfDiscFace").setAttribute("fill", mine ? "url(#discGradMine)" : "url(#discGradOwner)");
+      document.getElementById("shelfTooltipTitle").textContent = mine ? "Mi estantería" : "Estantería de Pochincho";
+      document.getElementById("shelfTooltipHint").textContent = mine ? "Tocá para ver la de Pochincho" : "Tocá para ver Mi estantería";
+      document.getElementById("addCdBtn").classList.toggle("hidden", !canEditCurrentShelf());
+      document.getElementById("addCdBtn").title = mine ? "Agregar un disco a Mi estantería" : "Crear nuevo CD";
+      document.getElementById("backupBtn").classList.toggle("hidden", !mine);
+      if (!mine) document.getElementById("backupPopover").classList.add("hidden");
+      document.getElementById("myShelfCount").textContent = `${myCds.length} disco${myCds.length === 1 ? "" : "s"}`;
+    }
+
+    function setShelfMode(mode, silent = false) {
+      shelfMode = mode === "mine" ? "mine" : "owner";
+      try { localStorage.setItem(SHELF_MODE_KEY, shelfMode); } catch {}
+      cds = shelfMode === "mine" ? myCds : ownerCds;
+      // Al cambiar de estantería, limpiamos la búsqueda y los filtros
+      activeCategory = "Todas";
+      searchQuery = "";
+      document.getElementById("searchInput").value = "";
+      document.getElementById("clearSearchBtn").classList.add("hidden");
+      updateShelfUI();
+      renderSearchDropdownFilters();
+      renderShelf();
+      if (!silent) showToast(shelfMode === "mine" ? "Mi estantería" : "Estantería de Pochincho");
+    }
+
+    function exportMyShelf() {
+      const payload = { app: "WhitoSnako", type: "mi-estanteria", version: 1, exportedAt: new Date().toISOString(), cds: myCds };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `mi-estanteria-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      showToast("Copia descargada");
+    }
+
+    async function importMyShelf(file) {
+      if (!file) return;
+      if (file.size > 20 * 1024 * 1024) {
+        showToast("El archivo es demasiado grande.", true);
+        return;
+      }
+      let list;
+      try {
+        const data = JSON.parse(await file.text());
+        list = Array.isArray(data) ? data : data.cds;
+        if (!Array.isArray(list)) throw new Error("sin discos");
+      } catch {
+        showToast("Ese archivo no es una copia válida de la estantería.", true);
+        return;
+      }
+      const existingUrls = new Set(myCds.map(c => c.url));
+      const existingIds = new Set(myCds.map(c => c.id));
+      let skipped = 0;
+      const added = [];
+      list.map(sanitizeCd).forEach(c => {
+        if (!c || existingUrls.has(c.url)) { skipped++; return; }
+        if (existingIds.has(c.id)) c.id = `cd-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        existingUrls.add(c.url);
+        existingIds.add(c.id);
+        added.push(c);
+      });
+      const previous = myCds;
+      myCds = [...myCds, ...added];
+      if (!saveMyCds()) {
+        myCds = previous;
+        return;
+      }
+      if (shelfMode === "mine") cds = myCds;
+      updateShelfUI();
+      renderSearchDropdownFilters();
+      renderShelf();
+      showToast(`Se agregaron ${added.length} disco${added.length === 1 ? "" : "s"}${skipped ? ` (${skipped} repetidos o inválidos se saltearon)` : ""}`);
     }
 
     function refreshGhConfigUI() {
@@ -1929,7 +2176,7 @@
       document.getElementById("lockClosedIcon").classList.toggle("hidden", isOwnerMode);
       document.getElementById("lockOpenIcon").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("ownerDot").classList.toggle("hidden", !isOwnerMode);
-      document.getElementById("addCdBtn").classList.toggle("hidden", !isOwnerMode);
+      updateShelfUI();
       document.getElementById("githubConfigBtn").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("lockLoginView").classList.toggle("hidden", isOwnerMode);
       document.getElementById("lockActiveView").classList.toggle("hidden", !isOwnerMode);
@@ -1941,6 +2188,11 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       await loadInitialData();
+      // Estantería que se muestra al entrar: la última que eligió el visitante
+      myCds = loadMyCds();
+      shelfMode = getStoredShelfMode();
+      cds = shelfMode === "mine" ? myCds : ownerCds;
+      updateShelfUI();
       draftCustomBgs = JSON.parse(JSON.stringify(savedCustomBgs));
       draftHiddenBgs = [...savedHiddenBgs];
       draftBgCategories = JSON.parse(JSON.stringify(savedBgCategories));
@@ -1960,6 +2212,33 @@
       const lockPopover = document.getElementById("lockPopover");
       const brushPopover = document.getElementById("brushPopover");
       const githubPopover = document.getElementById("githubPopover");
+
+      const backupPopover = document.getElementById("backupPopover");
+
+      document.getElementById("shelfToggleBtn").addEventListener("click", () => {
+        setShelfMode(shelfMode === "mine" ? "owner" : "mine");
+      });
+
+      document.getElementById("backupBtn").addEventListener("click", () => {
+        updateShelfUI();
+        backupPopover.classList.toggle("hidden");
+        lockPopover.classList.add("hidden");
+        brushPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+        searchOptionsDropdown.classList.add("hidden");
+      });
+      // Los demás botones cierran el panel de copia de seguridad
+      ["lupaBtn", "lockBtn", "brushBtn", "githubConfigBtn"].forEach(id => {
+        document.getElementById(id).addEventListener("click", () => backupPopover.classList.add("hidden"));
+      });
+
+      document.getElementById("exportShelfBtn").addEventListener("click", exportMyShelf);
+      const importInput = document.getElementById("importShelfInput");
+      document.getElementById("importShelfBtn").addEventListener("click", () => importInput.click());
+      importInput.addEventListener("change", async () => {
+        await importMyShelf(importInput.files[0]);
+        importInput.value = "";
+      });
 
       lupaBtn.addEventListener("click", () => {
         const isOpen = searchExpandBox.classList.toggle("open");
@@ -2135,11 +2414,11 @@
 
       document.getElementById("cdForm").addEventListener("submit", e => {
         e.preventDefault();
-        if (!isOwnerMode) return;
+        if (!canEditCurrentShelf()) return;
         if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
 
         const editId = document.getElementById("editCdId").value;
-        const cdData = {
+        const cdData = sanitizeCd({
           id: editId || "cd-" + Date.now(),
           title: document.getElementById("cdTitleInput").value.trim(),
           category: document.getElementById("cdCategoryInput").value.trim() || "General",
@@ -2156,18 +2435,23 @@
             opacity: Number(document.getElementById("boxPatternOpacity").value),
             textColor: currentModalTextColor
           }
-        };
+        });
+        if (!cdData) {
+          showToast("El link tiene que empezar con http:// o https://", true);
+          return;
+        }
 
         if (editId) {
           cds = cds.map(c => (c.id === editId ? cdData : c));
         } else {
-          cds.unshift(cdData);
+          cds = [cdData, ...cds];
         }
 
         renderSearchDropdownFilters();
         renderShelf();
         closeCdModal();
-        syncToGitHub();
+        persistCds();
+        updateShelfUI();
       });
     });
   </script>
