@@ -1,5 +1,5 @@
 {
-  "bg": "radial-gradient(#D6CBB8 1.2px, transparent 1.8px) 0 0 / 22px 22px, linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 100%)",
+  "bg": "radial-gradient(at 15% 15%, #81d75b 0px, transparent 55%), radial-gradient(at 85% 80%, #78d7dc 0px, transparent 55%), #449ed5",
   "bgCategories": [
     {
       "id": "light",
@@ -20,6 +20,18 @@
       "id": "bg-1792223580574",
       "name": "Fondo personalizado",
       "css": "linear-gradient(#ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, #ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, #0000a0 0%, #8080ff 100%)",
+      "cat": "cat-1792224638897"
+    },
+    {
+      "id": "bg-1792227411653",
+      "name": "Fondo personalizado",
+      "css": "linear-gradient(125deg, #449ed5 0%, #81d75b 38%, #78d7dc 72%, #449ed5 100%)",
+      "cat": "cat-1792224638897"
+    },
+    {
+      "id": "bg-1792227422628",
+      "name": "Fondo personalizado",
+      "css": "radial-gradient(at 15% 15%, #81d75b 0px, transparent 55%), radial-gradient(at 85% 80%, #78d7dc 0px, transparent 55%), #449ed5",
       "cat": "cat-1792224638897"
     }
   ],
