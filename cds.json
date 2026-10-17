@@ -80,13 +80,18 @@
         "Web"
       ],
       "design": {
-        "c1": "#55f2ff",
-        "c2": "#4338ca",
-        "c3": "#ec4899",
-        "pattern": "scanlines",
+        "c1": "#ffc06c",
+        "c2": "#feb723",
+        "c3": "#e69348",
+        "pattern": "honeycomb",
         "scale": 50,
         "opacity": 50,
-        "textColor": "#fef08a"
+        "colorCount": 3,
+        "patternColor": "#ffffff",
+        "rotation": 0,
+        "randomness": 0,
+        "seed": 387491,
+        "textColor": "#0f172a"
       }
     }
   ]
