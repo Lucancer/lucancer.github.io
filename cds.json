@@ -1,5 +1,5 @@
 {
-  "bg": "radial-gradient(ellipse at 50% 0%, #7F1D1D 0%, transparent 60%), linear-gradient(180deg, #0C0A09 0%, #1C1917 100%)",
+  "bg": "linear-gradient(180deg, #1A0B2E 0%, #4A1259 55%, #FF6B9D 100%)",
   "cds": [
     {
       "id": "cd-1792221942853",
