@@ -140,10 +140,11 @@
       "desc": "Scanner",
       "keywords": [
         "Web",
-        "scan",
         "URL",
         "Anti",
-        "Virus"
+        "Virus",
+        "Scan",
+        "Detector"
       ],
       "design": {
         "c1": "#000000",
