@@ -72,6 +72,36 @@
   ],
   "cds": [
     {
+      "id": "cd-1792243425747-adtq5",
+      "title": "Temp Mail",
+      "category": "Mail",
+      "url": "https://temp-mail.org/es/",
+      "img": "https://i.pinimg.com/1200x/32/5e/d7/325ed7648be6e69b32f4ef85862ae9d5.jpg",
+      "desc": "Mails Temporales",
+      "keywords": [
+        "Web",
+        "Red",
+        "Mail",
+        "Temporal",
+        "URL",
+        "Anti"
+      ],
+      "design": {
+        "c1": "#4e8c4a",
+        "c2": "#57a869",
+        "c3": "#000000",
+        "pattern": "holo",
+        "scale": 37,
+        "opacity": 90,
+        "colorCount": 1,
+        "patternColor": "",
+        "rotation": 0,
+        "randomness": 0,
+        "seed": 233114,
+        "textColor": "#fef08a"
+      }
+    },
+    {
       "id": "cd-1792242811899-cus12",
       "title": "ANY RUN",
       "category": "Virus",
