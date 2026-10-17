@@ -1,4 +1,26 @@
 {
   "bg": "linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%)",
-  "cds": []
+  "cds": [
+    {
+      "id": "cd-1792217173018",
+      "title": "Proyecto AURA",
+      "category": "Toe",
+      "url": "https://farmeo-de-aura.netlify.app/",
+      "img": "",
+      "desc": "NASHE",
+      "keywords": [
+        "Aura",
+        "Web"
+      ],
+      "design": {
+        "c1": "#00ff80",
+        "c2": "#265c23",
+        "c3": "#ec4899",
+        "pattern": "cyber",
+        "scale": 50,
+        "opacity": 57,
+        "textColor": "#ffffff"
+      }
+    }
+  ]
 }
