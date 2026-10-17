@@ -1,10 +1,26 @@
 {
   "bg": "linear-gradient(#ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, #ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, #0000a0 0%, #8080ff 100%)",
+  "bgCategories": [
+    {
+      "id": "light",
+      "name": "Claros"
+    },
+    {
+      "id": "dark",
+      "name": "Oscuros"
+    },
+    {
+      "id": "cat-1792224638897",
+      "name": "AZULES"
+    }
+  ],
+  "presetCats": {},
   "customBgs": [
     {
       "id": "bg-1792223580574",
       "name": "Fondo personalizado",
-      "css": "linear-gradient(#ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, #ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, #0000a0 0%, #8080ff 100%)"
+      "css": "linear-gradient(#ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, #ddddff55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, #0000a0 0%, #8080ff 100%)",
+      "cat": "cat-1792224638897"
     }
   ],
   "hiddenBgs": [],
