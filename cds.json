@@ -1,5 +1,5 @@
 {
-  "bg": "repeating-radial-gradient(circle at 50% 50%, #111827 0 2px, #1F2937 2px 4px)",
+  "bg": "radial-gradient(#FFFFFF 1px, transparent 1.5px) 0 0 / 40px 40px, radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1.5px) 20px 20px / 40px 40px, linear-gradient(180deg, #0B1026 0%, #1E1B4B 100%)",
   "cds": [
     {
       "id": "cd-1792221942853",
