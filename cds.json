@@ -72,6 +72,29 @@
   ],
   "cds": [
     {
+      "id": "cd-1792243758646-yfvti",
+      "title": "DP Tools",
+      "category": "General",
+      "url": "https://delphi.tools/tools/qr-genny/",
+      "img": "",
+      "desc": "",
+      "keywords": [],
+      "design": {
+        "c1": "#000000",
+        "c2": "#ffff00",
+        "c3": "#000000",
+        "pattern": "lightning",
+        "scale": 44,
+        "opacity": 90,
+        "colorCount": 2,
+        "patternColor": "#000000",
+        "rotation": 0,
+        "randomness": 0,
+        "seed": 112896,
+        "textColor": "#0f172a"
+      }
+    },
+    {
       "id": "cd-1792243425747-adtq5",
       "title": "Temp Mail",
       "category": "Mail",
