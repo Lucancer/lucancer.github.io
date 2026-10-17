@@ -777,6 +777,8 @@
       { id: "dark", name: "Oscuros" }
     ];
     let savedBgCategories = DEFAULT_BG_CATEGORIES.map(c => ({ ...c }));
+    // Fondos de fábrica que el dueño movió de categoría: { idDelFondo: idDeCategoria }
+    let savedPresetCats = {};
 
     function isValidBgCategory(c) {
       return c && typeof c.id === "string" && /^[\w-]+$/.test(c.id) &&
@@ -792,10 +794,16 @@
         const missingDefaults = DEFAULT_BG_CATEGORIES.filter(d => !valid.some(c => c.id === d.id));
         savedBgCategories = [...missingDefaults.map(c => ({ ...c })), ...valid];
       }
+      if (data.presetCats && typeof data.presetCats === "object" && !Array.isArray(data.presetCats)) {
+        savedPresetCats = {};
+        Object.entries(data.presetCats).forEach(([bgId, catId]) => {
+          if (/^[\w-]+$/.test(bgId) && typeof catId === "string" && /^[\w-]+$/.test(catId)) savedPresetCats[bgId] = catId;
+        });
+      }
     }
 
     function saveBgLibraryLocally() {
-      localStorage.setItem(STORAGE_BG_LIBRARY_KEY, JSON.stringify({ customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, bgCategories: savedBgCategories }));
+      localStorage.setItem(STORAGE_BG_LIBRARY_KEY, JSON.stringify({ customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, bgCategories: savedBgCategories, presetCats: savedPresetCats }));
     }
 
     function getGhConfig() {
@@ -929,7 +937,7 @@
           throw new Error(`GET ${getRes.status}`);
         }
 
-        const payloadObj = { bg: currentBg, bgCategories: savedBgCategories, customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, cds: cds };
+        const payloadObj = { bg: currentBg, bgCategories: savedBgCategories, presetCats: savedPresetCats, customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, cds: cds };
         const jsonString = JSON.stringify(payloadObj, null, 2);
         const utf8Bytes = new TextEncoder().encode(jsonString);
         let binaryStr = "";
@@ -1282,6 +1290,7 @@
     let draftBgCategories = [];
     let bgDeleteMode = false;      // se activa con el botón del tacho
     let addingBgCategory = false;  // muestra el campo para escribir una categoría nueva
+    let draftPresetCats = {};      // categoría elegida por el dueño para fondos de fábrica movidos
 
     // Fondos de fábrica que van en "Oscuros" (el resto va en "Claros")
     const DARK_PRESET_IDS = ["cyber-dusk", "rock-night", "synthwave", "vinyl-grooves", "deep-forest", "starry"];
@@ -1379,7 +1388,11 @@
     }
 
     function bgCategoryOf(entry) {
-      if (entry.kind === "preset") return DARK_PRESET_IDS.includes(entry.id) ? "dark" : "light";
+      if (entry.kind === "preset") {
+        const moved = draftPresetCats[entry.id];
+        if (moved && draftBgCategories.some(c => c.id === moved)) return moved;
+        return DARK_PRESET_IDS.includes(entry.id) ? "dark" : "light";
+      }
       if (entry.cat && draftBgCategories.some(c => c.id === entry.cat)) return entry.cat;
       return estimateBgLuminance(entry.css) < 0.55 ? "dark" : "light";
     }
@@ -1392,18 +1405,154 @@
       const localDot = e.kind === "local"
         ? `<span title="Solo en este navegador" class="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-sky-500 ring-1 ring-white"></span>`
         : "";
-      return `<div class="relative" data-bg-id="${e.id}">
-        <button type="button" onclick="previewBgById('${e.id}')" title="${escapeHtml(e.name || "Fondo personalizado")}" style="background: ${e.css};" class="w-11 h-11 rounded-xl border shadow-xs hover:scale-105 transition ${selected ? "border-slate-800 ring-2 ring-slate-800 ring-offset-1" : "border-slate-300"}"></button>
+      // El dueño puede arrastrar los fondos (no los "Mis fondos" del navegador) a otra categoría
+      const draggable = isOwnerMode && e.kind !== "local";
+      const dragAttrs = draggable
+        ? `onpointerdown="onBgPointerDown(event, '${e.id}')"`
+        : "";
+      return `<div class="relative select-none ${draggable ? "cursor-grab" : ""}" data-bg-id="${e.id}" ${dragAttrs}>
+        <div role="button" tabindex="0" onclick="previewBgById('${e.id}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); previewBgById('${e.id}'); }" title="${escapeHtml(e.name || "Fondo personalizado")}${draggable ? " · arrastralo para cambiarlo de categoría" : ""}" style="background: ${e.css};" class="w-11 h-11 rounded-xl border shadow-xs hover:scale-105 transition ${draggable ? "" : "cursor-pointer"} ${selected ? "border-slate-800 ring-2 ring-slate-800 ring-offset-1" : "border-slate-300"}"></div>
         ${deleteBtn}${localDot}
       </div>`;
+    }
+
+    /* ---------- Arrastrar fondos entre categorías (propietario) ----------
+       Funciona con mouse (arrastrar) y con el dedo (mantener apretado y arrastrar). */
+    const DROP_HIGHLIGHT = ["bg-sky-100/80", "ring-2", "ring-sky-400"];
+    let bgDrag = null;            // datos del arrastre en curso
+    let suppressBgClick = false;  // evita que soltar un arrastre cuente como "click"
+
+    function onBgPointerDown(event, id) {
+      if (event.button !== 0 || bgDrag) return;
+      if (event.target.closest('[title="Borrar este fondo"]')) return;
+      const tile = event.currentTarget;
+      bgDrag = { id, tile, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY,
+        isTouch: event.pointerType !== "mouse", active: false, ghost: null, timer: null, target: null, scrollRaf: null };
+      // Con el dedo hay que mantener apretado un instante (si no, es un scroll normal)
+      if (bgDrag.isTouch) bgDrag.timer = setTimeout(() => startBgDrag(), 350);
+      document.addEventListener("pointermove", onBgPointerMove);
+      document.addEventListener("pointerup", onBgPointerUp);
+      document.addEventListener("pointercancel", cancelBgDrag);
+      document.addEventListener("touchmove", blockScrollWhileDragging, { passive: false });
+    }
+
+    function blockScrollWhileDragging(event) {
+      if (bgDrag && bgDrag.active) event.preventDefault();
+    }
+
+    function startBgDrag() {
+      if (!bgDrag || bgDrag.active) return;
+      bgDrag.active = true;
+      const rect = bgDrag.tile.getBoundingClientRect();
+      const ghost = bgDrag.tile.cloneNode(true);
+      ghost.querySelectorAll('[title="Borrar este fondo"]').forEach(el => el.remove());
+      Object.assign(ghost.style, {
+        position: "fixed", left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`,
+        zIndex: 9999, pointerEvents: "none", transform: "scale(1.12) rotate(-4deg)",
+        filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.3))", transition: "transform 0.12s ease"
+      });
+      bgDrag.offsetX = bgDrag.x - rect.left;
+      bgDrag.offsetY = bgDrag.y - rect.top;
+      document.body.appendChild(ghost);
+      bgDrag.ghost = ghost;
+      bgDrag.tile.classList.add("opacity-30");
+      document.body.style.cursor = "grabbing";
+      if (navigator.vibrate && bgDrag.isTouch) navigator.vibrate(15);
+      autoScrollBgGrid();
+    }
+
+    function onBgPointerMove(event) {
+      if (!bgDrag) return;
+      bgDrag.x = event.clientX;
+      bgDrag.y = event.clientY;
+      const moved = Math.hypot(bgDrag.x - bgDrag.startX, bgDrag.y - bgDrag.startY);
+      if (!bgDrag.active) {
+        if (bgDrag.isTouch) {
+          if (moved > 8) cancelBgDrag();      // el dedo se movió antes de tiempo: es un scroll
+        } else if (moved > 6) {
+          startBgDrag();
+        }
+        return;
+      }
+      event.preventDefault();
+      bgDrag.ghost.style.left = `${bgDrag.x - bgDrag.offsetX}px`;
+      bgDrag.ghost.style.top = `${bgDrag.y - bgDrag.offsetY}px`;
+      const under = document.elementFromPoint(bgDrag.x, bgDrag.y);
+      const section = under ? under.closest("[data-drop-cat]") : null;
+      if (section !== bgDrag.target) {
+        if (bgDrag.target) bgDrag.target.classList.remove(...DROP_HIGHLIGHT);
+        if (section) section.classList.add(...DROP_HIGHLIGHT);
+        bgDrag.target = section;
+      }
+    }
+
+    // Si arrastrás cerca del borde de arriba/abajo de la lista, se scrollea sola
+    function autoScrollBgGrid() {
+      if (!bgDrag || !bgDrag.active) return;
+      const grid = document.getElementById("bgSwatchesGrid");
+      const r = grid.getBoundingClientRect();
+      const edge = 36;
+      if (bgDrag.x >= r.left && bgDrag.x <= r.right) {
+        if (bgDrag.y < r.top + edge) grid.scrollTop -= Math.ceil((r.top + edge - bgDrag.y) / 4);
+        else if (bgDrag.y > r.bottom - edge) grid.scrollTop += Math.ceil((bgDrag.y - (r.bottom - edge)) / 4);
+      }
+      bgDrag.scrollRaf = requestAnimationFrame(autoScrollBgGrid);
+    }
+
+    function onBgPointerUp() {
+      if (!bgDrag) return;
+      const { active, target, id } = bgDrag;
+      cleanupBgDrag();
+      if (active) {
+        suppressBgClick = true;
+        setTimeout(() => { suppressBgClick = false; }, 0);
+        if (target) moveBgToCategory(id, target.dataset.dropCat);
+      }
+    }
+
+    function cancelBgDrag() {
+      cleanupBgDrag();
+    }
+
+    function cleanupBgDrag() {
+      if (!bgDrag) return;
+      clearTimeout(bgDrag.timer);
+      cancelAnimationFrame(bgDrag.scrollRaf);
+      if (bgDrag.ghost) bgDrag.ghost.remove();
+      if (bgDrag.target) bgDrag.target.classList.remove(...DROP_HIGHLIGHT);
+      bgDrag.tile.classList.remove("opacity-30");
+      document.body.style.cursor = "";
+      document.removeEventListener("pointermove", onBgPointerMove);
+      document.removeEventListener("pointerup", onBgPointerUp);
+      document.removeEventListener("pointercancel", cancelBgDrag);
+      document.removeEventListener("touchmove", blockScrollWhileDragging);
+      bgDrag = null;
+    }
+
+    function moveBgToCategory(id, catId) {
+      if (!isOwnerMode || !draftBgCategories.some(c => c.id === catId)) return;
+      const entry = getBgEntries().find(e => e.id === id);
+      if (!entry || entry.kind === "local" || bgCategoryOf(entry) === catId) return;
+      if (entry.kind === "preset") {
+        const next = { ...draftPresetCats };
+        const defaultCat = DARK_PRESET_IDS.includes(id) ? "dark" : "light";
+        if (catId === defaultCat) delete next[id]; else next[id] = catId;
+        draftPresetCats = next;
+      } else {
+        draftCustomBgs = draftCustomBgs.map(b => (b.id === id ? { ...b, cat: catId } : b));
+      }
+      const catName = draftBgCategories.find(c => c.id === catId).name;
+      showToast(`Fondo movido a "${catName}". Acordate de Guardar.`);
+      renderBgSwatches();
     }
 
     function createTileHtml(catId) {
       return `<button type="button" onclick="openBgCreator('${catId}')" title="Crear un fondo en esta categoría" style="background: conic-gradient(from 45deg, #fde68a, #fbcfe8, #bae6fd, #bbf7d0, #fde68a);" class="w-11 h-11 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-800 font-bold text-lg hover:scale-105 transition">+</button>`;
     }
 
-    function categorySectionHtml(title, tiles, headerExtra = "") {
-      return `<section>
+    function categorySectionHtml(title, tiles, headerExtra = "", dropCatId = null) {
+      const dropAttrs = dropCatId ? `data-drop-cat="${dropCatId}"` : "";
+      return `<section class="rounded-lg p-1 transition" ${dropAttrs}>
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">${title}</span>
           ${headerExtra}
@@ -1466,6 +1615,7 @@
       if (DEFAULT_BG_CATEGORIES.some(c => c.id === catId)) return;
       draftBgCategories = draftBgCategories.filter(c => c.id !== catId);
       draftCustomBgs = draftCustomBgs.map(b => (b.cat === catId ? { ...b, cat: undefined } : b));
+      draftPresetCats = Object.fromEntries(Object.entries(draftPresetCats).filter(([, c]) => c !== catId));
       renderBgSwatches();
     }
 
@@ -1479,7 +1629,8 @@
       if (!isOwnerMode) return false;
       return JSON.stringify(draftCustomBgs) !== JSON.stringify(savedCustomBgs) ||
         JSON.stringify(draftHiddenBgs) !== JSON.stringify(savedHiddenBgs) ||
-        JSON.stringify(draftBgCategories) !== JSON.stringify(savedBgCategories);
+        JSON.stringify(draftBgCategories) !== JSON.stringify(savedBgCategories) ||
+        JSON.stringify(draftPresetCats) !== JSON.stringify(savedPresetCats);
     }
 
     function renderBgSwatches() {
@@ -1500,7 +1651,7 @@
         const headerExtra = bgDeleteMode && ownerCanEdit && !isDefault
           ? `<button type="button" onclick="deleteBgCategory('${cat.id}')" title="Borrar esta categoría" class="text-[10px] text-rose-600 hover:text-rose-800 font-medium">✕ Borrar categoría</button>`
           : (inCat.length === 0 ? `<span class="text-[10px] text-slate-400 italic">vacía</span>` : "");
-        return categorySectionHtml(escapeHtml(cat.name), tiles, headerExtra);
+        return categorySectionHtml(escapeHtml(cat.name), tiles, headerExtra, isOwnerMode ? cat.id : null);
       }).join("");
 
       // Fondos propios del visitante (solo en su navegador)
@@ -1535,7 +1686,9 @@
       trashBtn.title = bgDeleteMode ? "Salir del modo borrar" : "Borrar fondos";
       document.getElementById("bgHintText").innerHTML = bgDeleteMode
         ? `<span class="text-rose-700 font-medium">Modo borrar:</span> tocá la ✕ de lo que quieras quitar. Después <b>Guardá</b> o <b>Descartá</b> los cambios.`
-        : `Tocá un fondo para probarlo. Solo se guarda con el botón <b>Guardar</b>.`;
+        : isOwnerMode
+          ? `Tocá un fondo para probarlo, o <b>arrastralo</b> a otra categoría. Solo se guarda con <b>Guardar</b>.`
+          : `Tocá un fondo para probarlo. Solo se guarda con el botón <b>Guardar</b>.`;
 
       // Selector de categoría del creador (solo propietario)
       const select = document.getElementById("bgCustomCategory");
@@ -1575,6 +1728,7 @@
     }
 
     function previewBgById(id) {
+      if (suppressBgClick) return;  // fue un arrastre, no un click
       const entry = getBgEntries().find(e => e.id === id);
       if (!entry) return;
       previewBg = entry.css;
@@ -1618,6 +1772,7 @@
         savedCustomBgs = JSON.parse(JSON.stringify(draftCustomBgs));
         savedHiddenBgs = [...draftHiddenBgs];
         savedBgCategories = JSON.parse(JSON.stringify(draftBgCategories));
+        savedPresetCats = { ...draftPresetCats };
         localStorage.removeItem(VISITOR_BG_KEY);
         syncToGitHub();
       } else {
@@ -1633,6 +1788,7 @@
       draftCustomBgs = JSON.parse(JSON.stringify(savedCustomBgs));
       draftHiddenBgs = [...savedHiddenBgs];
       draftBgCategories = JSON.parse(JSON.stringify(savedBgCategories));
+      draftPresetCats = { ...savedPresetCats };
       bgDeleteMode = false;
       addingBgCategory = false;
       previewBg = baselineBg();
@@ -1778,6 +1934,7 @@
       draftCustomBgs = JSON.parse(JSON.stringify(savedCustomBgs));
       draftHiddenBgs = [...savedHiddenBgs];
       draftBgCategories = JSON.parse(JSON.stringify(savedBgCategories));
+      draftPresetCats = { ...savedPresetCats };
       // Si el visitante eligió su propio fondo, se lo mostramos
       previewBg = getVisitorChoice() || currentBg;
       setPageBg(previewBg);
