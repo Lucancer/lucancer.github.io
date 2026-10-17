@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Colección de Marcadores</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      min-height: 100vh;
+      margin: 0;
+      color: #1e293b;
+      transition: background 0.5s ease;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes spinCD {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cd-item-wrapper {
+      position: relative;
+      width: 280px;
+      height: 245px;
+      margin-right: 75px;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .cd-item-wrapper:hover {
+      transform: translateY(-4px);
+      z-index: 20;
+    }
+
+    .cd-disc-container {
+      position: absolute;
+      top: 12px;
+      left: 38px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      z-index: 1;
+      transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s ease;
+      filter: drop-shadow(4px 8px 16px rgba(0, 0, 0, 0.22));
+      pointer-events: none;
+    }
+
+    .cd-item-wrapper:hover .cd-disc-container {
+      transform: translateX(115px);
+    }
+
+    .cd-disc {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      border: 2px solid rgba(255, 255, 255, 0.65);
+      animation: spinCD 9s linear infinite;
+      animation-play-state: paused;
+    }
+
+    .cd-item-wrapper:hover .cd-disc {
+      animation-play-state: running;
+    }
+
+    .cd-disc::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255, 255, 255, 0.35) 40deg,
+        rgba(168, 237, 234, 0.3) 65deg,
+        rgba(254, 214, 227, 0.3) 90deg,
+        transparent 130deg,
+        transparent 180deg,
+        rgba(255, 255, 255, 0.35) 220deg,
+        rgba(194, 233, 251, 0.3) 250deg,
+        transparent 310deg
+      );
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .cd-center-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 36%, rgba(225,225,235,0.75) 38%, rgba(255,255,255,0.9) 55%, rgba(190,195,210,0.65) 70%);
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cd-center-hole {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(245, 240, 232, 0.92);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    .jewel-case {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      z-index: 2;
+      overflow: hidden;
+      display: flex;
+      box-shadow:
+        0 12px 26px -6px rgba(15, 23, 42, 0.22),
+        0 4px 10px -2px rgba(15, 23, 42, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.65),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.25);
+      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      cursor: pointer;
+    }
+
+    .jewel-case::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(125deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.06) 35%, transparent 45%, rgba(255,255,255,0.12) 100%);
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .jewel-spine {
+      width: 24px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.22) 0px,
+        rgba(0, 0, 0, 0.22) 2px,
+        rgba(255, 255, 255, 0.16) 2px,
+        rgba(255, 255, 255, 0.16) 4px
+      );
+      border-right: 1.5px solid rgba(255, 255, 255, 0.3);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      backdrop-filter: brightness(0.92);
+    }
+
+    .spine-text {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 9px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      text-transform: uppercase;
+      opacity: 0.85;
+      max-height: 210px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .glass-pill {
+      background: rgba(255, 253, 249, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(15, 23, 42, 0.09);
+      box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+    }
+
+    .search-expand {
+      width: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+
+    .search-expand.open {
+      width: 260px;
+      opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+      .search-expand.open { width: 185px; }
+      .cd-item-wrapper { margin-right: 45px; transform: scale(0.92); }
+    }
+  </style>
+</head>
+<body class="p-6 md:p-12">
+
+  <!-- notificación flotante de sincronización -->
+  <div id="syncToast" class="fixed bottom-5 right-5 z-50 hidden glass-pill px-4 py-2.5 rounded-2xl text-xs font-medium text-slate-800 shadow-lg items-center gap-2">
+    <span id="syncToastDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+    <span id="syncToastText">Sincronizado con GitHub</span>
+  </div>
+
+  <!-- BARRA SUPERIOR MINIMALISTA -->
+  <div class="fixed top-5 right-5 z-50 flex flex-col items-end gap-2">
+    
+    <div class="flex items-center gap-2">
+      <!-- Lupa con despliegue lateral -->
+      <div class="glass-pill rounded-full flex items-center px-1.5 py-1.5 transition-all">
+        <div id="searchExpandBox" class="search-expand flex items-center">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Buscar CD, palabra oculta..."
+            class="w-full bg-transparent pl-3 pr-2 py-1 text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+            autocomplete="off"
+          />
+          <button id="clearSearchBtn" class="hidden text-slate-400 hover:text-slate-600 pr-2 text-xs">✕</button>
+        </div>
+        <button id="lupaBtn" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-amber-900/5 transition" title="Buscar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path stroke-linecap="round" d="m21 21-4.3-4.3"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Botón Configuración GitHub API (Solo Modo Propietario) -->
+      <button
+        id="githubConfigBtn"
+        class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-indigo-600 hover:scale-105 transition relative"
+        title="Conectar Auto-Guardado con GitHub"
+      >
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        <span id="ghConnectedDot" class="hidden absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-indigo-500"></span>
+      </button>
+
+      <!-- Botón Pincel de Fondos (Solo Modo Propietario) -->
+      <button
+        id="brushBtn"
+        class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-amber-700 hover:scale-105 transition"
+        title="Personalizar Fondo"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"></path>
+        </svg>
+      </button>
+
+      <!-- Botón Añadir CD (Solo Modo Propietario) -->
+      <button
+        id="addCdBtn"
+        class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-emerald-700 hover:scale-105 transition"
+        title="Crear nuevo CD"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+        </svg>
+      </button>
+
+      <!-- Botón Candado -->
+      <button
+        id="lockBtn"
+        class="glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:scale-105 transition relative"
+        title="Modo Propietario"
+      >
+        <svg id="lockClosedIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <svg id="lockOpenIcon" class="w-4 h-4 hidden text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+        </svg>
+        <span id="ownerDot" class="hidden absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-emerald-500"></span>
+      </button>
+    </div>
+
+    <!-- DESPLEGABLE INFERIOR DE BÚSQUEDA -->
+    <div id="searchOptionsDropdown" class="hidden glass-pill rounded-2xl p-3.5 w-72 md:w-80 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Categorías</span>
+        <span id="resultsCounter" class="text-[11px] mono text-slate-500"></span>
+      </div>
+      <div id="categoryFilterChips" class="flex flex-wrap gap-1.5 mb-3"></div>
+      <div class="border-t border-slate-200/70 pt-2.5">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1.5">Búsqueda Fácil (Tags)</span>
+        <div id="quickKeywordsChips" class="flex flex-wrap gap-1.5"></div>
+      </div>
+    </div>
+
+    <!-- POPOVER DEL CANDADO -->
+    <div id="lockPopover" class="hidden glass-pill rounded-2xl p-4 w-72 shadow-xl">
+      <div id="lockLoginView">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-slate-700">Modo Propietario</span>
+          <span class="text-[10px] mono text-slate-400">Protegido</span>
+        </div>
+        <form id="unlockForm" class="flex items-center gap-1.5">
+          <input
+            id="ownerPassInput"
+            type="password"
+            placeholder="Código..."
+            class="w-full px-3 py-1.5 text-xs rounded-xl bg-white/80 border border-slate-200 focus:outline-none text-slate-800"
+            autocomplete="off"
+          />
+          <button type="submit" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-medium hover:bg-slate-700 transition shrink-0">
+            Entrar
+          </button>
+        </form>
+        <p id="lockStatusMsg" class="text-[11px] text-rose-600 mt-1.5 hidden"></p>
+      </div>
+
+      <div id="lockActiveView" class="hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-emerald-700">Modo Propietario Activo</p>
+            <p class="text-[11px] text-slate-500">Edición desbloqueada</p>
+          </div>
+          <button id="logoutOwnerBtn" class="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 text-xs font-medium transition">
+            Salir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POPOVER CONFIGURACIÓN DE GITHUB API (Auto-Guardado en la nube) -->
+    <div id="githubPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-800">Auto-Guardado en GitHub</span>
+        <span id="ghBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Sin vincular</span>
+      </div>
+      <p class="text-[11px] text-slate-500 leading-relaxed">
+        Ingresá tus datos una sola vez. Cada cambio que hagas se guardará directo en el archivo <code class="mono">cds.json</code> de tu GitHub.
+      </p>
+      <div class="space-y-2">
+        <input id="ghOwnerInput" type="text" placeholder="Tu usuario de GitHub (ej: lucapinero)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200" />
+        <input id="ghRepoInput" type="text" placeholder="Nombre del Repo (ej: mis-marcadores)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200" />
+        <input id="ghBranchInput" type="text" value="main" placeholder="Rama (main o master)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200 mono" />
+        <input id="ghTokenInput" type="password" placeholder="Token de GitHub (ghp_... o github_pat_...)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200 mono" />
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button id="saveGhConfigBtn" class="flex-1 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
+          Guardar y Sincronizar
+        </button>
+      </div>
+    </div>
+
+    <!-- POPOVER DEL PINCEL -->
+    <div id="brushPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-700">Fondo de la Estantería</span>
+        <span class="text-[10px] text-slate-400">Degradados suaves</span>
+      </div>
+      <div id="bgSwatchesGrid" class="grid grid-cols-5 gap-2.5 mb-3"></div>
+
+      <div id="customBgCreator" class="hidden border-t border-slate-200/80 pt-3 mt-2 space-y-2.5">
+        <span class="text-[11px] font-semibold text-slate-600 block">Crear degradado personalizado</span>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex flex-col items-center text-[10px] text-slate-500 gap-1">
+            Color 1
+            <input type="color" id="bgCustomC1" value="#FDFBF7" class="w-full h-7 rounded cursor-pointer border-0 bg-transparent" />
+          </label>
+          <label class="flex flex-col items-center text-[10px] text-slate-500 gap-1">
+            Color 2
+            <input type="color" id="bgCustomC2" value="#E8F0FE" class="w-full h-7 rounded cursor-pointer border-0 bg-transparent" />
+          </label>
+          <label class="flex flex-col items-center text-[10px] text-slate-500 gap-1">
+            Color 3
+            <input type="color" id="bgCustomC3" value="#FCE7F3" class="w-full h-7 rounded cursor-pointer border-0 bg-transparent" />
+          </label>
+        </div>
+        <div>
+          <label class="text-[10px] text-slate-500 block mb-1">Variedad de degradado</label>
+          <select id="bgCustomStyle" class="w-full text-xs rounded-xl px-2.5 py-1.5 bg-white/80 border border-slate-200 text-slate-700">
+            <option value="linear-135">Brisa Diagonal Suave (135°)</option>
+            <option value="cd-sheen">Reflejo Óptico de Disco</option>
+            <option value="aurora-radial">Halo Radial Difuminado</option>
+            <option value="mesh-soft">Malla Pastel Holográfica</option>
+            <option value="sunset-wave">Onda Horizontal Sedosa</option>
+          </select>
+        </div>
+        <button id="applyCustomBgBtn" class="w-full py-1.5 rounded-xl bg-slate-800 text-white text-xs font-medium hover:bg-slate-700 transition">
+          Aplicar y Guardar Fondo
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ESTANTERÍA DE CDs -->
+  <main class="max-w-7xl mx-auto pt-12 pb-20">
+    <div id="cdGrid" class="flex flex-wrap items-center justify-center sm:justify-start gap-y-10 gap-x-6"></div>
+
+    <div id="emptyState" class="hidden text-center py-24">
+      <p class="text-base font-medium text-slate-500">No se encontraron discos con ese criterio.</p>
+      <button id="resetFiltersBtn" class="mt-3 px-4 py-1.5 rounded-full text-xs bg-slate-800 text-white hover:bg-slate-700 transition">
+        Mostrar todos los CDs
+      </button>
+    </div>
+  </main>
+
+  <!-- MODAL CREAR / EDITAR CD -->
+  <div id="cdModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+    <div class="bg-[#FDFBF7] border border-slate-200/90 rounded-3xl max-w-3xl w-full p-6 md:p-7 shadow-2xl my-8">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div>
+          <h2 id="modalTitle" class="text-lg font-bold text-slate-800">Personalizar CD y Caja</h2>
+          <p class="text-xs text-slate-500">Subí una imagen desde tu PC o pegá un link, y diseñá la caja a medida</p>
+        </div>
+        <button id="closeModalBtn" class="w-8 h-8 rounded-full hover:bg-slate-200/70 flex items-center justify-center text-slate-500">✕</button>
+      </div>
+
+      <form id="cdForm" class="grid grid-cols-1 md:grid-cols-12 gap-6 pt-5">
+        <input type="hidden" id="editCdId" />
+
+        <div class="md:col-span-7 space-y-3.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre / Título del CD *</label>
+              <input id="cdTitleInput" type="text" required placeholder="Ej: GitHub Repos" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Categoría visible</label>
+              <input id="cdCategoryInput" type="text" placeholder="Ej: Código, Juegos..." class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">URL del Marcador (Link) *</label>
+            <input id="cdUrlInput" type="url" required placeholder="https://..." class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 mono" />
+          </div>
+
+          <!-- IMAGEN DEL CD: DESDE PC (CON AUTO-COMPRESIÓN) O LINK -->
+          <div class="p-3 rounded-2xl bg-slate-100/80 border border-slate-200/80 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700">Imagen del Disco Giratorio</label>
+              <span id="imgStatusBadge" class="text-[10px] text-slate-500">URL o Archivo de tu PC</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div id="discMiniPreview" class="w-12 h-12 rounded-full bg-slate-300 bg-cover bg-center shrink-0 border-2 border-white shadow"></div>
+              <div class="flex-1 space-y-1.5">
+                <input id="cdImgFile" type="file" accept="image/*" class="w-full text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer" />
+                <input id="cdImgInput" type="text" placeholder="O pegá un link de imagen (https://...)" class="w-full px-2.5 py-1 text-[11px] rounded-lg bg-white border border-slate-200" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Notas / Tracklist (Impreso al dorso)</label>
+            <input id="cdDescInput" type="text" placeholder="Breve descripción..." class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200" />
+          </div>
+
+          <!-- PALABRAS CLAVE OCULTAS -->
+          <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/70">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-semibold text-amber-900">Palabras Clave Ocultas (Búsqueda Fácil)</label>
+              <span class="text-[10px] text-amber-700 bg-amber-200/60 px-2 py-0.5 rounded-full">Oculto en la caja</span>
+            </div>
+            <div class="flex gap-1.5 mb-2">
+              <input id="keywordDraftInput" type="text" placeholder="Ej: Web, Juego, Red, Chat..." class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-amber-200" />
+              <button type="button" id="addKeywordBtn" class="px-3 py-1.5 rounded-xl bg-amber-800 text-white text-xs font-medium hover:bg-amber-700 shrink-0">+ Tag</button>
+            </div>
+            <div class="flex flex-wrap gap-1 mb-2">
+              <button type="button" data-quicktag="Web" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Web</button>
+              <button type="button" data-quicktag="Juego" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Juego</button>
+              <button type="button" data-quicktag="Red" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Red</button>
+              <button type="button" data-quicktag="Chat" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Chat</button>
+            </div>
+            <div id="activeKeywordsContainer" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </div>
+
+        <!-- DISEÑO DE LA CAJA -->
+        <div class="md:col-span-5 flex flex-col justify-between bg-white/80 border border-slate-200/90 rounded-2xl p-4 space-y-3">
+          <div class="space-y-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-600 block">Diseño de Caja (3 Colores + Patrón)</span>
+
+            <div class="grid grid-cols-3 gap-2">
+              <label class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                Color 1
+                <input type="color" id="boxColor1" value="#1e1b4b" class="w-full h-7 mt-1 cursor-pointer bg-transparent border-0" />
+              </label>
+              <label class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                Color 2
+                <input type="color" id="boxColor2" value="#4338ca" class="w-full h-7 mt-1 cursor-pointer bg-transparent border-0" />
+              </label>
+              <label class="flex flex-col items-center text-[11px] font-medium text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                Color 3
+                <input type="color" id="boxColor3" value="#ec4899" class="w-full h-7 mt-1 cursor-pointer bg-transparent border-0" />
+              </label>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Variedad de Diseño / Patrón</label>
+              <select id="boxPatternSelect" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200">
+                <option value="prism">Prisma Holográfico</option>
+                <option value="matrix">Letras Tipo Matrix</option>
+                <option value="animal">Animal Print</option>
+                <option value="circles">Círculos Concéntricos</option>
+                <option value="cyber">Grilla Láser</option>
+                <option value="halftone">Trama de Puntos</option>
+                <option value="waves">Ondas Seda</option>
+                <option value="smooth">Degradado Puro</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                  <span>Escala / Ángulo</span>
+                  <span id="scaleValLabel">50%</span>
+                </div>
+                <input id="boxPatternScale" type="range" min="15" max="100" value="50" class="w-full accent-slate-800 cursor-pointer" />
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                  <span>Intensidad</span>
+                  <span id="opacityValLabel">45%</span>
+                </div>
+                <input id="boxPatternOpacity" type="range" min="10" max="90" value="45" class="w-full accent-slate-800 cursor-pointer" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs font-semibold text-slate-700">Texto</span>
+              <div class="flex gap-1.5">
+                <button type="button" data-textcolor="#ffffff" class="text-color-btn px-2.5 py-1 rounded-lg text-[11px] bg-slate-800 text-white font-medium">Claro</button>
+                <button type="button" data-textcolor="#0f172a" class="text-color-btn px-2.5 py-1 rounded-lg text-[11px] bg-white text-slate-900 font-medium border border-slate-300">Oscuro</button>
+                <button type="button" data-textcolor="#fef08a" class="text-color-btn px-2.5 py-1 rounded-lg text-[11px] bg-slate-900 text-yellow-200 font-medium">Neón</button>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <span class="text-[10px] uppercase tracking-wider text-slate-400 block mb-1.5">Vista previa de la caja</span>
+              <div id="liveBoxPreview" class="w-full h-36 rounded-xl border border-slate-300 shadow-inner relative overflow-hidden flex items-end p-3">
+                <div id="livePreviewText" class="relative z-10">
+                  <p class="text-[10px] mono uppercase opacity-80">TRK #01 • PREVIEW</p>
+                  <p class="text-sm font-bold leading-tight">Título de Ejemplo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <button type="button" id="cancelModalBtn" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+            <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition">Guardar CD</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /*************************************************************************
+     * 1. SEGURIDAD SHA-256 + ANTI-FUERZA BRUTA
+     *************************************************************************/
+    const AUTH_SALT = "cd_vault_v3_salt#992817";
+    const TARGET_OWNER_HASH = "e0e74f9e29ebaa5c5556e31bb5b23a2ef039ee6dfcf23e6883180c2f74a35318";
+    const RATE_LIMIT_KEY = "cd_vault_rate_limit_v3";
+    let isOwnerMode = false;
+
+    async function sha256Hex(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function getRateLimitState() {
+      try {
+        return JSON.parse(localStorage.getItem(RATE_LIMIT_KEY)) || { attempts: 0, lockUntil: 0 };
+      } catch {
+        return { attempts: 0, lockUntil: 0 };
+      }
+    }
+
+    function saveRateLimitState(state) {
+      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state));
+    }
+
+    /*************************************************************************
+     * 2. COMPRESOR INTELIGENTE PARA FOTOS SUBIDAS DESDE LA PC
+     *    Redimensiona la imagen a 420x420px en formato WebP/JPEG liviano
+     *    para que quede guardada directo dentro de cds.json en GitHub.
+     *************************************************************************/
+    function compressLocalImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const maxDim = 420;
+            let w = img.width;
+            let h = img.height;
+            if (w > h) {
+              if (w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            } else {
+              if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, w, h);
+            // Exportamos en formato ultra liviano para que pese ~25KB
+            let dataUrl = canvas.toDataURL("image/webp", 0.82);
+            if (!dataUrl.startsWith("data:image/webp")) {
+              dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+            }
+            resolve(dataUrl);
+          };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /*************************************************************************
+     * 3. SINCRONIZACIÓN CON GITHUB API (LECTURA PÚBLICA + GUARDADO PROPIETARIO)
+     *************************************************************************/
+    const GH_CONFIG_KEY = "cd_vault_gh_config_v1";
+    const STORAGE_CDS_KEY = "cd_bookmarks_collection_v3";
+    const STORAGE_BG_KEY = "cd_bookmarks_bg_v3";
+
+    let cds = [];
+    let currentBg = "linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%)";
+
+    function getGhConfig() {
+      try {
+        return JSON.parse(localStorage.getItem(GH_CONFIG_KEY)) || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById("syncToast");
+      const dot = document.getElementById("syncToastDot");
+      const text = document.getElementById("syncToastText");
+      dot.className = `w-2 h-2 rounded-full ${isError ? "bg-rose-500" : "bg-emerald-500"}`;
+      text.textContent = msg;
+      toast.classList.remove("hidden");
+      toast.classList.add("flex");
+      setTimeout(() => {
+        toast.classList.add("hidden");
+        toast.classList.remove("flex");
+      }, 3500);
+    }
+
+    // Carga los datos desde cds.json del servidor (para que todos vean tus marcadores en cualquier PC)
+    async function loadInitialData() {
+      try {
+        const res = await fetch(`./cds.json?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.cds)) cds = data.cds;
+          if (data.bg) {
+            currentBg = data.bg;
+            document.documentElement.style.setProperty("--bg-gradient", currentBg);
+          }
+          localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
+          localStorage.setItem(STORAGE_BG_KEY, currentBg);
+          return;
+        }
+      } catch (e) {
+        console.warn("Usando respaldo local mientras se sube cds.json:", e);
+      }
+
+      // Respaldo si se abre directo en la PC sin servidor
+      const savedCds = localStorage.getItem(STORAGE_CDS_KEY);
+      if (savedCds) cds = JSON.parse(savedCds);
+      const savedBg = localStorage.getItem(STORAGE_BG_KEY);
+      if (savedBg) {
+        currentBg = savedBg;
+        document.documentElement.style.setProperty("--bg-gradient", currentBg);
+      }
+    }
+
+    // Guarda automáticamente en el repositorio de GitHub usando la API oficial
+    async function syncToGitHub() {
+      localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
+      localStorage.setItem(STORAGE_BG_KEY, currentBg);
+
+      const cfg = getGhConfig();
+      if (!cfg || !cfg.owner || !cfg.repo || !cfg.token) {
+        showToast("Guardado en esta PC (Vinculá GitHub en el ícono para sincronizar en la nube)");
+        return;
+      }
+
+      showToast("Subiendo cambios a GitHub...");
+      const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/cds.json`;
+      const branch = cfg.branch || "main";
+
+      try {
+        // 1. Obtener el SHA actual del archivo cds.json si existe
+        let currentSha = null;
+        const getRes = await fetch(`${apiUrl}?ref=${branch}`, {
+          headers: {
+            Authorization: `Bearer ${cfg.token}`,
+            Accept: "application/vnd.github+json"
+          }
+        });
+
+        if (getRes.ok) {
+          const fileInfo = await getRes.json();
+          currentSha = fileInfo.sha;
+        }
+
+        // 2. Codificar el JSON completo (incluyendo imágenes comprimidas) en UTF-8 Base64
+        const payloadObj = { bg: currentBg, cds: cds };
+        const jsonString = JSON.stringify(payloadObj, null, 2);
+        const utf8Bytes = new TextEncoder().encode(jsonString);
+        let binaryStr = "";
+        for (let i = 0; i < utf8Bytes.length; i++) {
+          binaryStr += String.fromCharCode(utf8Bytes[i]);
+        }
+        const base64Content = btoa(binaryStr);
+
+        // 3. Enviar el actualización a GitHub
+        const putBody = {
+          message: "Actualizar estantería de CDs",
+          content: base64Content,
+          branch: branch
+        };
+        if (currentSha) putBody.sha = currentSha;
+
+        const putRes = await fetch(apiUrl, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${cfg.token}`,
+            Accept: "application/vnd.github+json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(putBody)
+        });
+
+        if (!putRes.ok) {
+          throw new Error(`Error ${putRes.status}`);
+        }
+
+        showToast("¡Guardado en GitHub! En segundos se actualiza en todas las PCs.");
+      } catch (err) {
+        console.error(err);
+        showToast("Error al subir a GitHub. Revisá tu Token o nombre de Repo.", true);
+      }
+    }
+
+    /*************************************************************************
+     * 4. FONDOS Y PATRONES DE LAS CAJAS
+     *************************************************************************/
+    const BG_PRESETS = [
+      { id: "warm-cream", name: "Blanco Crema Suave", css: "linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%)" },
+      { id: "pearl-opal", name: "Ópalo Nacarado", css: "linear-gradient(135deg, #FAF8F5 0%, #E8EEF5 50%, #F5E8F0 100%)" },
+      { id: "cd-iridescent", name: "Brillo CD Pastel", css: "linear-gradient(125deg, #F8FAFC 0%, #E0F2FE 35%, #FCE7F3 70%, #FEF3C7 100%)" },
+      { id: "mint-silk", name: "Seda Menta", css: "linear-gradient(140deg, #F9FBF9 0%, #E6F4EA 55%, #EAF0F8 100%)" },
+      { id: "sunset-milk", name: "Durazno Difuminado", css: "linear-gradient(135deg, #FFFDF9 0%, #FDE8E8 50%, #FEF3C7 100%)" },
+      { id: "lavender-mist", name: "Niebla Lavanda", css: "linear-gradient(135deg, #FAF9FE 0%, #EDE9FE 50%, #FCE7F3 100%)" },
+      { id: "silver-disc", name: "Plata Acrílico", css: "linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 50%, #F1F5F9 100%)" },
+      { id: "prism-halo", name: "Halo Prisma", css: "radial-gradient(circle at 20% 20%, #FCE7F3 0%, #E0F2FE 45%, #FDFBF7 90%)" },
+      { id: "cyber-dusk", name: "Crepúsculo Holográfico", css: "linear-gradient(135deg, #1E1B4B 0%, #311042 50%, #0F172A 100%)" }
+    ];
+
+    function buildCustomBgGradient(c1, c2, c3, style) {
+      switch (style) {
+        case "cd-sheen": return `linear-gradient(125deg, ${c1} 0%, ${c2} 38%, ${c3} 72%, ${c1} 100%)`;
+        case "aurora-radial": return `radial-gradient(circle at 25% 25%, ${c2} 0%, ${c3} 48%, ${c1} 95%)`;
+        case "mesh-soft": return `radial-gradient(at 15% 15%, ${c2} 0px, transparent 55%), radial-gradient(at 85% 80%, ${c3} 0px, transparent 55%), ${c1}`;
+        case "sunset-wave": return `linear-gradient(180deg, ${c1} 0%, ${c2} 55%, ${c3} 100%)`;
+        default: return `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`;
+      }
+    }
+
+    function generateBoxStyle(design) {
+      const c1 = design?.c1 || "#1e1b4b";
+      const c2 = design?.c2 || "#4338ca";
+      const c3 = design?.c3 || "#ec4899";
+      const pattern = design?.pattern || "prism";
+      const scale = Number(design?.scale || 50);
+      const opacity = Number(design?.opacity || 45) / 100;
+      const baseGrad = `linear-gradient(${Math.round(scale * 3.6)}deg, ${c1} 0%, ${c2} 52%, ${c3} 100%)`;
+
+      if (pattern === "smooth") return `background: ${baseGrad};`;
+      if (pattern === "prism") {
+        return `background: conic-gradient(from ${scale * 2}deg at 75% 30%, rgba(255,255,255,${(opacity * 0.65).toFixed(2)}) 0deg, transparent 45deg, rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 110deg, transparent 180deg, rgba(255,255,255,${(opacity * 0.65).toFixed(2)}) 250deg, transparent 360deg), ${baseGrad};`;
+      }
+      if (pattern === "circles") {
+        const ringSize = Math.max(8, Math.round(scale / 3));
+        return `background: repeating-radial-gradient(circle at 80% 50%, rgba(255,255,255,${(opacity * 0.55).toFixed(2)}) 0px, rgba(255,255,255,${(opacity * 0.55).toFixed(2)}) 2px, transparent 2px, transparent ${ringSize}px), ${baseGrad};`;
+      }
+      if (pattern === "cyber") {
+        const cellSize = Math.max(12, Math.round(scale / 2));
+        return `background-image: linear-gradient(rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 1px, transparent 1px), ${baseGrad}; background-size: ${cellSize}px ${cellSize}px, ${cellSize}px ${cellSize}px, 100% 100%;`;
+      }
+      if (pattern === "halftone") {
+        const dotSpace = Math.max(8, Math.round(scale / 3.2));
+        return `background-image: radial-gradient(rgba(255,255,255,${(opacity * 0.7).toFixed(2)}) 22%, transparent 24%), ${baseGrad}; background-size: ${dotSpace}px ${dotSpace}px, 100% 100%;`;
+      }
+      if (pattern === "matrix") {
+        const svgMatrix = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><style>text{font-family:monospace;font-weight:bold;font-size:10px;fill:rgba(167,243,208,${opacity});}</style><text x='4' y='12'>1 0 1 A</text><text x='18' y='26'>0 F 9 1</text><text x='6' y='40'>X 7 0 C</text><text x='24' y='54'>1 1 0 Z</text></svg>`;
+        const tile = Math.max(38, Math.round(scale * 1.1));
+        return `background-image: url("data:image/svg+xml,${encodeURIComponent(svgMatrix)}"), ${baseGrad}; background-size: ${tile}px ${tile}px, 100% 100%;`;
+      }
+      if (pattern === "animal") {
+        const svgAnimal = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='rgba(0,0,0,${opacity})'><path d='M18,14 C26,10 34,18 28,26 C22,33 11,29 12,20 Z'/><path d='M56,18 C65,15 71,25 64,32 C57,38 46,32 49,23 Z'/><path d='M32,48 C43,43 51,54 44,63 C36,70 23,64 26,53 Z'/><circle cx='16' cy='58' r='6'/><circle cx='65' cy='60' r='7'/></g></svg>`;
+        const tile = Math.max(44, Math.round(scale * 1.3));
+        return `background-image: url("data:image/svg+xml,${encodeURIComponent(svgAnimal)}"), ${baseGrad}; background-size: ${tile}px ${tile}px, 100% 100%;`;
+      }
+      if (pattern === "waves") {
+        const svgWave = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><path d='M0 20 Q 25 5, 50 20 T 100 20' fill='none' stroke='rgba(255,255,255,${opacity})' stroke-width='2.5'/></svg>`;
+        const tileW = Math.max(50, Math.round(scale * 1.5));
+        return `background-image: url("data:image/svg+xml,${encodeURIComponent(svgWave)}"), ${baseGrad}; background-size: ${tileW}px ${Math.round(tileW * 0.45)}px, 100% 100%;`;
+      }
+      return `background: ${baseGrad};`;
+    }
+
+    /*************************************************************************
+     * 5. RENDERIZADO E INTERACCIÓN
+     *************************************************************************/
+    let activeCategory = "Todas";
+    let searchQuery = "";
+    let modalKeywords = [];
+    let currentModalTextColor = "#ffffff";
+
+    function normalizeStr(str) {
+      return (str || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function escapeHtml(str) {
+      return (str || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function cleanDomain(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
+    }
+
+    function renderShelf() {
+      const grid = document.getElementById("cdGrid");
+      const emptyState = document.getElementById("emptyState");
+      const q = normalizeStr(searchQuery.trim());
+
+      const filtered = cds.filter(item => {
+        const matchesCat = activeCategory === "Todas" || normalizeStr(item.category || "General") === normalizeStr(activeCategory);
+        if (!matchesCat) return false;
+        if (!q) return true;
+        return (
+          normalizeStr(item.title).includes(q) ||
+          normalizeStr(item.category).includes(q) ||
+          normalizeStr(item.desc).includes(q) ||
+          normalizeStr(item.url).includes(q) ||
+          (item.keywords || []).some(k => normalizeStr(k).includes(q))
+        );
+      });
+
+      document.getElementById("resultsCounter").textContent = `${filtered.length} CD${filtered.length === 1 ? "" : "s"}`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      grid.innerHTML = filtered.map((cd, idx) => {
+        const trackNum = String(idx + 1).padStart(2, "0");
+        const boxStyle = generateBoxStyle(cd.design);
+        const textColor = cd.design?.textColor || "#ffffff";
+        const discImg = cd.img && cd.img.trim()
+          ? `background-image: url('${cd.img.replace(/'/g, "\\'")}');`
+          : `background: conic-gradient(from 0deg, ${cd.design?.c1 || "#334155"}, ${cd.design?.c2 || "#6366f1"}, ${cd.design?.c3 || "#ec4899"}, ${cd.design?.c1 || "#334155"});`;
+
+        return `
+          <div class="cd-item-wrapper group">
+            <div class="cd-disc-container">
+              <div class="cd-disc" style="${discImg}">
+                <div class="cd-center-ring"><div class="cd-center-hole"></div></div>
+              </div>
+            </div>
+            <div class="jewel-case" style="${boxStyle} color: ${textColor};" onclick="window.open('${cd.url.replace(/'/g, "\\'")}', '_blank', 'noopener,noreferrer')">
+              <div class="jewel-spine">
+                <span class="spine-text mono">${escapeHtml(cd.category || "BOOKMARK")} • CD-${trackNum}</span>
+              </div>
+              <div class="flex-1 p-4 flex flex-col justify-between relative z-10 overflow-hidden">
+                <div class="flex items-start justify-between gap-2">
+                  <span class="mono text-[10px] font-bold tracking-widest px-2 py-0.5 rounded bg-black/25">TRK #${trackNum}</span>
+                  ${isOwnerMode ? `
+                    <div class="flex items-center gap-1 z-30" onclick="event.stopPropagation()">
+                      <button onclick="openEditCdModal('${cd.id}')" class="w-7 h-7 rounded-lg bg-black/45 hover:bg-black/70 text-white flex items-center justify-center">✎</button>
+                      <button onclick="deleteCd('${cd.id}')" class="w-7 h-7 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white flex items-center justify-center">✕</button>
+                    </div>
+                  ` : `<span class="text-[10px] mono opacity-75">STEREO DISC</span>`}
+                </div>
+                <div class="my-auto pt-2">
+                  <h3 class="font-bold text-base leading-snug line-clamp-2">${escapeHtml(cd.title)}</h3>
+                  <p class="text-[11px] opacity-85 mt-1 line-clamp-2">${escapeHtml(cd.desc || cd.url)}</p>
+                </div>
+                <div class="pt-2 border-t border-current/20 flex items-end justify-between gap-2">
+                  <div class="truncate">
+                    <span class="text-[9px] mono uppercase tracking-wider opacity-75 block">${escapeHtml(cd.category || "General")}</span>
+                    <span class="text-[10px] mono opacity-90 truncate block max-w-[140px]">${escapeHtml(cleanDomain(cd.url))}</span>
+                  </div>
+                  <div class="bg-white/90 px-1.5 py-0.5 rounded-xs flex items-center gap-[1.5px] h-5 shrink-0">
+                    <span class="w-[1.5px] h-full bg-slate-900"></span><span class="w-[3px] h-full bg-slate-900"></span><span class="w-[1px] h-full bg-slate-900"></span><span class="w-[2.5px] h-full bg-slate-900"></span><span class="w-[1.5px] h-full bg-slate-900"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderSearchDropdownFilters() {
+      const catContainer = document.getElementById("categoryFilterChips");
+      const kwContainer = document.getElementById("quickKeywordsChips");
+      const categories = ["Todas", ...new Set(cds.map(c => (c.category || "General").trim()).filter(Boolean))];
+
+      catContainer.innerHTML = categories.map(cat => {
+        const active = normalizeStr(cat) === normalizeStr(activeCategory);
+        return `<button onclick="selectCategoryFilter('${cat.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-full text-[11px] font-medium transition ${active ? "bg-slate-800 text-white" : "bg-slate-200/70 text-slate-700 hover:bg-slate-300/70"}">${escapeHtml(cat)}</button>`;
+      }).join("");
+
+      const allKeywords = [...new Set(cds.flatMap(c => c.keywords || []))].slice(0, 12);
+      kwContainer.innerHTML = allKeywords.map(kw => {
+        const isSelected = normalizeStr(searchQuery) === normalizeStr(kw);
+        return `<button onclick="quickFilterByKeyword('${kw.replace(/'/g, "\\'")}')" class="px-2 py-0.5 rounded-lg text-[11px] mono transition ${isSelected ? "bg-amber-700 text-white" : "bg-amber-500/10 text-amber-900 hover:bg-amber-500/20"}">#${escapeHtml(kw)}</button>`;
+      }).join("");
+    }
+
+    function selectCategoryFilter(cat) {
+      activeCategory = cat;
+      renderSearchDropdownFilters();
+      renderShelf();
+    }
+
+    function quickFilterByKeyword(kw) {
+      const input = document.getElementById("searchInput");
+      searchQuery = normalizeStr(searchQuery) === normalizeStr(kw) ? "" : kw;
+      input.value = searchQuery;
+      document.getElementById("clearSearchBtn").classList.toggle("hidden", !searchQuery);
+      renderSearchDropdownFilters();
+      renderShelf();
+    }
+
+    function renderBgSwatches() {
+      const grid = document.getElementById("bgSwatchesGrid");
+      const presetsHtml = BG_PRESETS.map(p => `<button type="button" onclick="applyBg('${p.css}')" title="${p.name}" style="background: ${p.css};" class="w-11 h-11 rounded-xl border border-slate-300 shadow-xs hover:scale-105 transition"></button>`).join("");
+      const customTileHtml = `<button type="button" onclick="document.getElementById('customBgCreator').classList.toggle('hidden')" title="Crear tu propio degradado" style="background: conic-gradient(from 45deg, #fde68a, #fbcfe8, #bae6fd, #bbf7d0, #fde68a);" class="w-11 h-11 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-800 font-bold text-lg hover:scale-105 transition">+</button>`;
+      grid.innerHTML = presetsHtml + customTileHtml;
+    }
+
+    function applyBg(cssValue) {
+      currentBg = cssValue;
+      document.documentElement.style.setProperty("--bg-gradient", cssValue);
+      syncToGitHub();
+    }
+
+    function updateLiveBoxPreview() {
+      const c1 = document.getElementById("boxColor1").value;
+      const c2 = document.getElementById("boxColor2").value;
+      const c3 = document.getElementById("boxColor3").value;
+      const pattern = document.getElementById("boxPatternSelect").value;
+      const scale = document.getElementById("boxPatternScale").value;
+      const opacity = document.getElementById("boxPatternOpacity").value;
+      const title = document.getElementById("cdTitleInput").value || "Título de Ejemplo";
+
+      document.getElementById("scaleValLabel").textContent = `${scale}%`;
+      document.getElementById("opacityValLabel").textContent = `${opacity}%`;
+
+      const previewEl = document.getElementById("liveBoxPreview");
+      previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, pattern, scale, opacity })} color: ${currentModalTextColor};`);
+      document.querySelector("#livePreviewText p:last-child").textContent = title;
+
+      const imgVal = document.getElementById("cdImgInput").value.trim();
+      const miniDisc = document.getElementById("discMiniPreview");
+      miniDisc.style.backgroundImage = imgVal ? `url('${imgVal.replace(/'/g, "\\'")}')` : "none";
+    }
+
+    function renderModalKeywords() {
+      const container = document.getElementById("activeKeywordsContainer");
+      if (modalKeywords.length === 0) {
+        container.innerHTML = `<span class="text-[11px] text-amber-800/60 italic">Sin palabras ocultas</span>`;
+        return;
+      }
+      container.innerHTML = modalKeywords.map((k, i) => `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] bg-amber-900 text-amber-50 font-medium">#${escapeHtml(k)} <button type="button" onclick="removeModalKeyword(${i})" class="hover:text-rose-300">✕</button></span>`).join("");
+    }
+
+    function addModalKeywordFromStr(rawStr) {
+      rawStr.split(",").map(s => s.trim()).filter(Boolean).forEach(p => {
+        if (!modalKeywords.some(existing => normalizeStr(existing) === normalizeStr(p))) modalKeywords.push(p);
+      });
+      renderModalKeywords();
+    }
+
+    function removeModalKeyword(idx) {
+      modalKeywords.splice(idx, 1);
+      renderModalKeywords();
+    }
+
+    function openNewCdModal() {
+      if (!isOwnerMode) return;
+      document.getElementById("modalTitle").textContent = "Crear Nuevo CD";
+      document.getElementById("editCdId").value = "";
+      document.getElementById("cdTitleInput").value = "";
+      document.getElementById("cdCategoryInput").value = "";
+      document.getElementById("cdUrlInput").value = "";
+      document.getElementById("cdImgInput").value = "";
+      document.getElementById("cdImgFile").value = "";
+      document.getElementById("cdDescInput").value = "";
+      document.getElementById("imgStatusBadge").textContent = "URL o Archivo de tu PC";
+      modalKeywords = [];
+      renderModalKeywords();
+      updateLiveBoxPreview();
+      document.getElementById("cdModal").classList.replace("hidden", "flex");
+    }
+
+    function openEditCdModal(id) {
+      if (!isOwnerMode) return;
+      const item = cds.find(c => c.id === id);
+      if (!item) return;
+      document.getElementById("modalTitle").textContent = "Editar CD";
+      document.getElementById("editCdId").value = item.id;
+      document.getElementById("cdTitleInput").value = item.title || "";
+      document.getElementById("cdCategoryInput").value = item.category || "";
+      document.getElementById("cdUrlInput").value = item.url || "";
+      document.getElementById("cdImgInput").value = item.img || "";
+      document.getElementById("cdImgFile").value = "";
+      document.getElementById("cdDescInput").value = item.desc || "";
+      modalKeywords = Array.isArray(item.keywords) ? [...item.keywords] : [];
+      renderModalKeywords();
+      document.getElementById("boxColor1").value = item.design?.c1 || "#1e1b4b";
+      document.getElementById("boxColor2").value = item.design?.c2 || "#4338ca";
+      document.getElementById("boxColor3").value = item.design?.c3 || "#ec4899";
+      document.getElementById("boxPatternSelect").value = item.design?.pattern || "prism";
+      document.getElementById("boxPatternScale").value = item.design?.scale ?? 50;
+      document.getElementById("boxPatternOpacity").value = item.design?.opacity ?? 45;
+      currentModalTextColor = item.design?.textColor || "#ffffff";
+      updateLiveBoxPreview();
+      document.getElementById("cdModal").classList.replace("hidden", "flex");
+    }
+
+    function closeCdModal() {
+      document.getElementById("cdModal").classList.replace("flex", "hidden");
+    }
+
+    function deleteCd(id) {
+      if (!isOwnerMode) return;
+      cds = cds.filter(c => c.id !== id);
+      renderSearchDropdownFilters();
+      renderShelf();
+      syncToGitHub();
+    }
+
+    function refreshGhConfigUI() {
+      const cfg = getGhConfig();
+      const hasCfg = Boolean(cfg && cfg.owner && cfg.repo && cfg.token);
+      document.getElementById("ghConnectedDot").classList.toggle("hidden", !hasCfg);
+      const badge = document.getElementById("ghBadge");
+      badge.textContent = hasCfg ? "Conectado" : "Sin vincular";
+      badge.className = `text-[10px] px-2 py-0.5 rounded-full ${hasCfg ? "bg-emerald-100 text-emerald-800 font-semibold" : "bg-slate-200 text-slate-600"}`;
+      if (cfg) {
+        document.getElementById("ghOwnerInput").value = cfg.owner || "";
+        document.getElementById("ghRepoInput").value = cfg.repo || "";
+        document.getElementById("ghBranchInput").value = cfg.branch || "main";
+        document.getElementById("ghTokenInput").value = cfg.token || "";
+      }
+    }
+
+    function updateOwnerUI() {
+      document.getElementById("lockClosedIcon").classList.toggle("hidden", isOwnerMode);
+      document.getElementById("lockOpenIcon").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("ownerDot").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("brushBtn").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("addCdBtn").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("githubConfigBtn").classList.toggle("hidden", !isOwnerMode);
+      document.getElementById("lockLoginView").classList.toggle("hidden", isOwnerMode);
+      document.getElementById("lockActiveView").classList.toggle("hidden", !isOwnerMode);
+      refreshGhConfigUI();
+      renderShelf();
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadInitialData();
+      renderBgSwatches();
+      renderSearchDropdownFilters();
+      renderShelf();
+
+      const lupaBtn = document.getElementById("lupaBtn");
+      const searchExpandBox = document.getElementById("searchExpandBox");
+      const searchOptionsDropdown = document.getElementById("searchOptionsDropdown");
+      const searchInput = document.getElementById("searchInput");
+      const clearSearchBtn = document.getElementById("clearSearchBtn");
+      const lockPopover = document.getElementById("lockPopover");
+      const brushPopover = document.getElementById("brushPopover");
+      const githubPopover = document.getElementById("githubPopover");
+
+      lupaBtn.addEventListener("click", () => {
+        const isOpen = searchExpandBox.classList.toggle("open");
+        searchOptionsDropdown.classList.toggle("hidden", !isOpen);
+        lockPopover.classList.add("hidden");
+        brushPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+        if (isOpen) setTimeout(() => searchInput.focus(), 150);
+      });
+
+      searchInput.addEventListener("input", e => {
+        searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle("hidden", !searchQuery);
+        renderSearchDropdownFilters();
+        renderShelf();
+      });
+
+      clearSearchBtn.addEventListener("click", () => {
+        searchQuery = "";
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        renderSearchDropdownFilters();
+        renderShelf();
+      });
+
+      document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+        searchQuery = "";
+        activeCategory = "Todas";
+        searchInput.value = "";
+        clearSearchBtn.classList.add("hidden");
+        renderSearchDropdownFilters();
+        renderShelf();
+      });
+
+      document.getElementById("lockBtn").addEventListener("click", () => {
+        lockPopover.classList.toggle("hidden");
+        brushPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+        searchOptionsDropdown.classList.add("hidden");
+      });
+
+      document.getElementById("githubConfigBtn").addEventListener("click", () => {
+        githubPopover.classList.toggle("hidden");
+        lockPopover.classList.add("hidden");
+        brushPopover.classList.add("hidden");
+        searchOptionsDropdown.classList.add("hidden");
+      });
+
+      document.getElementById("saveGhConfigBtn").addEventListener("click", () => {
+        const cfg = {
+          owner: document.getElementById("ghOwnerInput").value.trim(),
+          repo: document.getElementById("ghRepoInput").value.trim(),
+          branch: document.getElementById("ghBranchInput").value.trim() || "main",
+          token: document.getElementById("ghTokenInput").value.trim()
+        };
+        localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(cfg));
+        refreshGhConfigUI();
+        githubPopover.classList.add("hidden");
+        syncToGitHub();
+      });
+
+      document.getElementById("unlockForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const statusMsg = document.getElementById("lockStatusMsg");
+        const inputEl = document.getElementById("ownerPassInput");
+        const now = Date.now();
+        const rl = getRateLimitState();
+
+        if (rl.lockUntil > now) {
+          statusMsg.textContent = `Bloqueado. Esperá ${Math.ceil((rl.lockUntil - now) / 1000)}s.`;
+          statusMsg.classList.remove("hidden");
+          return;
+        }
+
+        await new Promise(r => setTimeout(r, 300));
+        const candidateHash = await sha256Hex(`${AUTH_SALT}:${inputEl.value}`);
+
+        if (candidateHash === TARGET_OWNER_HASH) {
+          saveRateLimitState({ attempts: 0, lockUntil: 0 });
+          isOwnerMode = true;
+          inputEl.value = "";
+          statusMsg.classList.add("hidden");
+          updateOwnerUI();
+          lockPopover.classList.add("hidden");
+        } else {
+          rl.attempts += 1;
+          if (rl.attempts >= 3) {
+            rl.lockUntil = Date.now() + 30000 * Math.pow(2, rl.attempts - 3);
+            statusMsg.textContent = `Demasiados intentos. Bloqueado.`;
+          } else {
+            statusMsg.textContent = `Código incorrecto (${3 - rl.attempts} intentos restantes).`;
+          }
+          saveRateLimitState(rl);
+          statusMsg.classList.remove("hidden");
+        }
+      });
+
+      document.getElementById("logoutOwnerBtn").addEventListener("click", () => {
+        isOwnerMode = false;
+        updateOwnerUI();
+        lockPopover.classList.add("hidden");
+      });
+
+      document.getElementById("brushBtn").addEventListener("click", () => {
+        brushPopover.classList.toggle("hidden");
+        lockPopover.classList.add("hidden");
+        githubPopover.classList.add("hidden");
+      });
+
+      document.getElementById("applyCustomBgBtn").addEventListener("click", () => {
+        const css = buildCustomBgGradient(
+          document.getElementById("bgCustomC1").value,
+          document.getElementById("bgCustomC2").value,
+          document.getElementById("bgCustomC3").value,
+          document.getElementById("bgCustomStyle").value
+        );
+        applyBg(css);
+      });
+
+      document.getElementById("addCdBtn").addEventListener("click", openNewCdModal);
+      document.getElementById("closeModalBtn").addEventListener("click", closeCdModal);
+      document.getElementById("cancelModalBtn").addEventListener("click", closeCdModal);
+
+      // Cuando elegís una imagen descargada en tu PC, la comprime y la deja lista para guardar en la nube
+      document.getElementById("cdImgFile").addEventListener("change", async e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const badge = document.getElementById("imgStatusBadge");
+        badge.textContent = "Optimizando imagen...";
+        try {
+          const compressedDataUrl = await compressLocalImage(file);
+          document.getElementById("cdImgInput").value = compressedDataUrl;
+          badge.textContent = "✓ Imagen de PC lista para guardar en la nube";
+          updateLiveBoxPreview();
+        } catch {
+          badge.textContent = "Error al procesar la imagen";
+        }
+      });
+
+      const kwDraft = document.getElementById("keywordDraftInput");
+      document.getElementById("addKeywordBtn").addEventListener("click", () => {
+        if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
+      });
+      kwDraft.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
+        }
+      });
+
+      document.querySelectorAll(".quick-tag-btn").forEach(btn => {
+        btn.addEventListener("click", () => addModalKeywordFromStr(btn.dataset.quicktag));
+      });
+
+      ["boxColor1", "boxColor2", "boxColor3", "boxPatternSelect", "boxPatternScale", "boxPatternOpacity", "cdTitleInput", "cdImgInput"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updateLiveBoxPreview);
+      });
+
+      document.querySelectorAll(".text-color-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          currentModalTextColor = btn.dataset.textcolor;
+          updateLiveBoxPreview();
+        });
+      });
+
+      document.getElementById("cdForm").addEventListener("submit", e => {
+        e.preventDefault();
+        if (!isOwnerMode) return;
+        if (kwDraft.value.trim()) { addModalKeywordFromStr(kwDraft.value); kwDraft.value = ""; }
+
+        const editId = document.getElementById("editCdId").value;
+        const cdData = {
+          id: editId || "cd-" + Date.now(),
+          title: document.getElementById("cdTitleInput").value.trim(),
+          category: document.getElementById("cdCategoryInput").value.trim() || "General",
+          url: document.getElementById("cdUrlInput").value.trim(),
+          img: document.getElementById("cdImgInput").value.trim(),
+          desc: document.getElementById("cdDescInput").value.trim(),
+          keywords: [...modalKeywords],
+          design: {
+            c1: document.getElementById("boxColor1").value,
+            c2: document.getElementById("boxColor2").value,
+            c3: document.getElementById("boxColor3").value,
+            pattern: document.getElementById("boxPatternSelect").value,
+            scale: Number(document.getElementById("boxPatternScale").value),
+            opacity: Number(document.getElementById("boxPatternOpacity").value),
+            textColor: currentModalTextColor
+          }
+        };
+
+        if (editId) {
+          cds = cds.map(c => (c.id === editId ? cdData : c));
+        } else {
+          cds.unshift(cdData);
+        }
+
+        renderSearchDropdownFilters();
+        renderShelf();
+        closeCdModal();
+        syncToGitHub();
+      });
+    });
+  </script>
+</body>
+</html>
