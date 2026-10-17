@@ -311,7 +311,7 @@
       </div>
     </div>
 
-    <!-- POPOVER CANDADO (CONTRASEÑA: 2308) -->
+    <!-- POPOVER CANDADO -->
     <div id="lockPopover" class="hidden glass-pill rounded-2xl p-4 w-72 shadow-xl">
       <div id="lockLoginView">
         <div class="flex items-center justify-between mb-2">
@@ -371,9 +371,9 @@
     <div id="brushPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl">
       <div class="flex items-center justify-between mb-3">
         <span class="text-xs font-semibold text-slate-700">Fondo de la Estantería</span>
-        <span class="text-[10px] text-slate-400">Degradados suaves</span>
+        <span class="text-[10px] text-slate-400">Degradados y texturas</span>
       </div>
-      <div id="bgSwatchesGrid" class="grid grid-cols-5 gap-2.5 mb-3"></div>
+      <div id="bgSwatchesGrid" class="grid grid-cols-5 gap-2.5 mb-3 max-h-64 overflow-y-auto p-1"></div>
 
       <div id="customBgCreator" class="hidden border-t border-slate-200/80 pt-3 mt-2 space-y-2.5">
         <span class="text-[11px] font-semibold text-slate-600 block">Crear degradado personalizado</span>
@@ -399,6 +399,13 @@
             <option value="aurora-radial">Halo Radial Difuminado</option>
             <option value="mesh-soft">Malla Pastel Holográfica</option>
             <option value="sunset-wave">Onda Horizontal Sedosa</option>
+            <option value="conic-swirl">Remolino Cónico</option>
+            <option value="spotlight">Foco de Escenario</option>
+            <option value="stripes">Rayas Diagonales (Color 1 y 2)</option>
+            <option value="dots">Lunares (Color 3 sobre 1 y 2)</option>
+            <option value="grid">Cuadrícula (Color 3)</option>
+            <option value="checker">Damero (Color 1 y 2)</option>
+            <option value="sunburst">Rayos de Sol (Color 1 y 2)</option>
           </select>
         </div>
         <button id="applyCustomBgBtn" class="w-full py-1.5 rounded-xl bg-slate-800 text-white text-xs font-medium hover:bg-slate-700 transition">
@@ -515,14 +522,38 @@
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Variedad de Diseño / Patrón</label>
               <select id="boxPatternSelect" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200">
-                <option value="prism">Prisma Holográfico</option>
-                <option value="matrix">Letras Tipo Matrix</option>
-                <option value="animal">Animal Print</option>
-                <option value="circles">Círculos Concéntricos</option>
-                <option value="cyber">Grilla Láser</option>
-                <option value="halftone">Trama de Puntos</option>
-                <option value="waves">Ondas Seda</option>
-                <option value="smooth">Degradado Puro</option>
+                <optgroup label="Clásicos">
+                  <option value="smooth">Degradado Puro</option>
+                  <option value="prism" selected>Prisma Holográfico</option>
+                  <option value="aurora">Aurora Difuminada</option>
+                  <option value="grain">Grano de Película</option>
+                </optgroup>
+                <optgroup label="Rock & Retro">
+                  <option value="snake">Escamas de Serpiente</option>
+                  <option value="lightning">Rayos</option>
+                  <option value="vinyl">Surcos de Vinilo</option>
+                  <option value="music">Notas Musicales</option>
+                  <option value="synthwave">Synthwave 80s</option>
+                  <option value="sunburst">Rayos de Sol Retro</option>
+                  <option value="scanlines">Pantalla CRT</option>
+                </optgroup>
+                <optgroup label="Geométricos">
+                  <option value="circles">Círculos Concéntricos</option>
+                  <option value="cyber">Grilla Láser</option>
+                  <option value="halftone">Trama de Puntos</option>
+                  <option value="stripes">Rayas Diagonales</option>
+                  <option value="checker">Damero</option>
+                  <option value="plaid">Escocés</option>
+                  <option value="zigzag">Zigzag</option>
+                  <option value="triangles">Triángulos</option>
+                </optgroup>
+                <optgroup label="Divertidos">
+                  <option value="matrix">Letras Tipo Matrix</option>
+                  <option value="animal">Animal Print</option>
+                  <option value="waves">Ondas Seda</option>
+                  <option value="stars">Destellos</option>
+                  <option value="bubbles">Burbujas</option>
+                </optgroup>
               </select>
             </div>
 
@@ -574,10 +605,31 @@
 
   <script>
     /*************************************************************************
-     * CONTRASEÑA DIRECTA: 2308
+     * SEGURIDAD: CONTRASEÑA CIFRADA (SHA-256 + SAL) + ANTI-FUERZA BRUTA
+     * Acá solo se guarda el "hash", nunca la contraseña en texto.
      *************************************************************************/
-    const OWNER_PASSWORD = "2308";
+    const AUTH_SALT = "whitosnake_vault_v4#5531";
+    const TARGET_OWNER_HASH = "e4884cefb4edd437c68688e670e0e62825d69da6fdda60ab75c61bcfbe4f4194";
+    const RATE_LIMIT_KEY = "cd_vault_rate_limit_v4";
     let isOwnerMode = false;
+
+    async function sha256Hex(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function getRateLimitState() {
+      try {
+        return JSON.parse(localStorage.getItem(RATE_LIMIT_KEY)) || { attempts: 0, lockUntil: 0 };
+      } catch {
+        return { attempts: 0, lockUntil: 0 };
+      }
+    }
+
+    function saveRateLimitState(state) {
+      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state));
+    }
 
     /*************************************************************************
      * COMPRESOR DE IMAGENES DE LA PC
@@ -647,9 +699,32 @@
       }, 3500);
     }
 
+    // Si este navegador tiene GitHub vinculado, lee cds.json directo del repo
+    // (siempre la última versión). Si no, usa el cds.json publicado en la web,
+    // que puede tardar 1-2 minutos en actualizarse después de guardar.
+    async function fetchCdsJson() {
+      const cfg = getGhConfig();
+      if (cfg && cfg.owner && cfg.repo && cfg.token) {
+        try {
+          const branch = cfg.branch || "main";
+          const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/cds.json?ref=${encodeURIComponent(branch)}`, {
+            cache: "no-store",
+            headers: {
+              Authorization: `Bearer ${cfg.token}`,
+              Accept: "application/vnd.github.raw+json"
+            }
+          });
+          if (res.ok) return res;
+        } catch (e) {
+          console.warn("No se pudo leer desde GitHub, uso la versión publicada:", e);
+        }
+      }
+      return fetch(`./cds.json?t=${Date.now()}`, { cache: "no-store" });
+    }
+
     async function loadInitialData() {
       try {
-        const res = await fetch(`./cds.json?t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetchCdsJson();
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.cds)) cds = data.cds;
@@ -674,7 +749,11 @@
       }
     }
 
-    async function syncToGitHub() {
+    // Los guardados se hacen de a uno por vez (en fila) para que dos cambios
+    // seguidos no choquen entre sí en GitHub (error 409 "sha no coincide").
+    let syncQueue = Promise.resolve();
+
+    function syncToGitHub() {
       localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
       localStorage.setItem(STORAGE_BG_KEY, currentBg);
 
@@ -685,12 +764,30 @@
       }
 
       showToast("Subiendo cambios a GitHub...");
+      syncQueue = syncQueue.then(() => pushToGitHub(cfg));
+      return syncQueue;
+    }
+
+    function ghErrorMessage(status) {
+      if (status === 401) return "Token inválido o vencido. Creá uno nuevo.";
+      if (status === 403) return "El Token no tiene permiso de escritura (Contents: Read and write).";
+      if (status === 404) return "No se encontró el repo o la rama. Revisá usuario, repo y rama.";
+      if (status === 409 || status === 422) return "Conflicto al guardar. Recargá la página e intentá de nuevo.";
+      if (status === 0) return "Sin conexión con GitHub. Revisá tu internet.";
+      return `Error ${status} al subir a GitHub.`;
+    }
+
+    async function pushToGitHub(cfg, isRetry = false) {
       const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/cds.json`;
       const branch = cfg.branch || "main";
+      let status = 0;
 
       try {
+        // Pedimos siempre el SHA más reciente: sin "no-store" el navegador
+        // reutiliza una respuesta vieja (hasta 60 s) y GitHub rechaza el guardado.
         let currentSha = null;
-        const getRes = await fetch(`${apiUrl}?ref=${branch}`, {
+        const getRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, {
+          cache: "no-store",
           headers: {
             Authorization: `Bearer ${cfg.token}`,
             Accept: "application/vnd.github+json"
@@ -700,6 +797,9 @@
         if (getRes.ok) {
           const fileInfo = await getRes.json();
           currentSha = fileInfo.sha;
+        } else if (getRes.status !== 404) {
+          status = getRes.status;
+          throw new Error(`GET ${getRes.status}`);
         }
 
         const payloadObj = { bg: currentBg, cds: cds };
@@ -728,11 +828,18 @@
           body: JSON.stringify(putBody)
         });
 
-        if (!putRes.ok) throw new Error(`Error ${putRes.status}`);
+        if (!putRes.ok) {
+          status = putRes.status;
+          // Si alguien guardó justo antes, reintentamos una vez con el SHA nuevo
+          if ((status === 409 || status === 422) && !isRetry) {
+            return pushToGitHub(cfg, true);
+          }
+          throw new Error(`PUT ${putRes.status}`);
+        }
         showToast("¡Guardado en GitHub correctamente!");
       } catch (err) {
         console.error(err);
-        showToast("Error al subir a GitHub. Revisá tu Token.", true);
+        showToast(ghErrorMessage(status), true);
       }
     }
 
@@ -748,11 +855,32 @@
       { id: "lavender-mist", name: "Niebla Lavanda", css: "linear-gradient(135deg, #FAF9FE 0%, #EDE9FE 50%, #FCE7F3 100%)" },
       { id: "silver-disc", name: "Plata Acrílico", css: "linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 50%, #F1F5F9 100%)" },
       { id: "prism-halo", name: "Halo Prisma", css: "radial-gradient(circle at 20% 20%, #FCE7F3 0%, #E0F2FE 45%, #FDFBF7 90%)" },
-      { id: "cyber-dusk", name: "Crepúsculo Holográfico", css: "linear-gradient(135deg, #1E1B4B 0%, #311042 50%, #0F172A 100%)" }
+      { id: "cyber-dusk", name: "Crepúsculo Holográfico", css: "linear-gradient(135deg, #1E1B4B 0%, #311042 50%, #0F172A 100%)" },
+      { id: "kraft-paper", name: "Papel Kraft", css: "linear-gradient(135deg, #F7EFE2 0%, #EBDDC5 55%, #E3D2B6 100%)" },
+      { id: "cotton-sky", name: "Cielo de Algodón", css: "linear-gradient(160deg, #F0F9FF 0%, #E0E7FF 50%, #FDF2F8 100%)" },
+      { id: "holo-foil", name: "Lámina Holográfica", css: "linear-gradient(115deg, #E0F2FE 0%, #FCE7F3 25%, #FEF9C3 50%, #DCFCE7 75%, #E0E7FF 100%)" },
+      { id: "sunset-mesh", name: "Malla Atardecer", css: "radial-gradient(at 10% 10%, #FDE68A 0, transparent 50%), radial-gradient(at 90% 20%, #FBCFE8 0, transparent 50%), radial-gradient(at 50% 95%, #BAE6FD 0, transparent 55%), #FFFBF5" },
+      { id: "cream-dots", name: "Lunares Crema", css: "radial-gradient(#D6CBB8 1.2px, transparent 1.8px) 0 0 / 22px 22px, linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 100%)" },
+      { id: "notebook", name: "Hoja Cuadriculada", css: "linear-gradient(rgba(100,116,139,0.09) 1px, transparent 1px) 0 0 / 28px 28px, linear-gradient(90deg, rgba(100,116,139,0.09) 1px, transparent 1px) 0 0 / 28px 28px, #FBFAF7" },
+      { id: "pastel-stripes", name: "Rayas Pastel", css: "repeating-linear-gradient(45deg, #FDF2F8 0 22px, #F0F9FF 22px 44px)" },
+      { id: "picnic", name: "Cuadros Picnic", css: "conic-gradient(#FDE2E4 25%, #FFF8F0 0 50%, #FDE2E4 0 75%, #FFF8F0 0) 0 0 / 48px 48px" },
+      { id: "retro-sun", name: "Sol Retro", css: "repeating-conic-gradient(from 0deg at 50% 0%, #FEF3C7 0deg 6deg, #FDE68A 6deg 12deg)" },
+      { id: "rock-night", name: "Noche de Rock", css: "radial-gradient(ellipse at 50% 0%, #7F1D1D 0%, transparent 60%), linear-gradient(180deg, #0C0A09 0%, #1C1917 100%)" },
+      { id: "synthwave", name: "Synthwave", css: "linear-gradient(180deg, #1A0B2E 0%, #4A1259 55%, #FF6B9D 100%)" },
+      { id: "vinyl-grooves", name: "Surcos de Vinilo", css: "repeating-radial-gradient(circle at 50% 50%, #111827 0 2px, #1F2937 2px 4px)" },
+      { id: "deep-forest", name: "Bosque Nocturno", css: "radial-gradient(at 20% 80%, #065F46 0, transparent 55%), linear-gradient(160deg, #052E16 0%, #0F172A 100%)" },
+      { id: "starry", name: "Cielo Estrellado", css: "radial-gradient(#FFFFFF 1px, transparent 1.5px) 0 0 / 40px 40px, radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1.5px) 20px 20px / 40px 40px, linear-gradient(180deg, #0B1026 0%, #1E1B4B 100%)" }
     ];
 
     function buildCustomBgGradient(c1, c2, c3, style) {
       switch (style) {
+        case "stripes": return `repeating-linear-gradient(45deg, ${c1} 0 24px, ${c2} 24px 48px)`;
+        case "dots": return `radial-gradient(${c3} 2px, transparent 2.5px) 0 0 / 26px 26px, linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+        case "grid": return `linear-gradient(${c3}55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(90deg, ${c3}55 1px, transparent 1px) 0 0 / 30px 30px, linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+        case "checker": return `conic-gradient(${c1} 25%, ${c2} 0 50%, ${c1} 0 75%, ${c2} 0) 0 0 / 56px 56px`;
+        case "conic-swirl": return `conic-gradient(from 200deg at 30% 40%, ${c1}, ${c2}, ${c3}, ${c1})`;
+        case "sunburst": return `repeating-conic-gradient(from 0deg at 50% 0%, ${c1} 0deg 6deg, ${c2} 6deg 12deg)`;
+        case "spotlight": return `radial-gradient(ellipse at 50% 0%, ${c3} 0%, transparent 60%), linear-gradient(180deg, ${c1} 0%, ${c2} 100%)`;
         case "cd-sheen": return `linear-gradient(125deg, ${c1} 0%, ${c2} 38%, ${c3} 72%, ${c1} 100%)`;
         case "aurora-radial": return `radial-gradient(circle at 25% 25%, ${c2} 0%, ${c3} 48%, ${c1} 95%)`;
         case "mesh-soft": return `radial-gradient(at 15% 15%, ${c2} 0px, transparent 55%), radial-gradient(at 85% 80%, ${c3} 0px, transparent 55%), ${c1}`;
@@ -769,8 +897,87 @@
       const scale = Number(design?.scale || 50);
       const opacity = Number(design?.opacity || 45) / 100;
       const baseGrad = `linear-gradient(${Math.round(scale * 3.6)}deg, ${c1} 0%, ${c2} 52%, ${c3} 100%)`;
+      // Blanco / negro semitransparente según la intensidad elegida
+      const w = k => `rgba(255,255,255,${(opacity * k).toFixed(2)})`;
+      const d = k => `rgba(0,0,0,${(opacity * k).toFixed(2)})`;
+      // SVG embebido con comillas simples, para no romper el atributo style="..."
+      const svgUrl = svg => `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, "%27")}')`;
+      const svgPattern = (svg, tileW, tileH = tileW) =>
+        `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: ${tileW}px ${tileH}px, 100% 100%;`;
 
       if (pattern === "smooth") return `background: ${baseGrad};`;
+      if (pattern === "aurora") {
+        return `background: radial-gradient(ellipse at 15% 20%, ${c3} 0%, transparent ${30 + scale / 3}%), radial-gradient(ellipse at 85% 85%, ${c2} 0%, transparent ${35 + scale / 3}%), radial-gradient(circle at 70% 15%, ${w(0.6)} 0%, transparent 30%), ${c1};`;
+      }
+      if (pattern === "grain") {
+        const freq = (0.5 + (100 - scale) / 80).toFixed(2);
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 ${(opacity * 1.6).toFixed(2)} 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+        return svgPattern(svg, 160);
+      }
+      if (pattern === "snake") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><g fill='${d(0.25)}' stroke='${w(0.75)}' stroke-width='1.2'><path d='M-10 20 A10 10 0 0 1 10 20 A10 10 0 0 1 30 20'/><path d='M0 10 A10 10 0 0 1 20 10'/><path d='M-10 0 A10 10 0 0 1 10 0 A10 10 0 0 1 30 0'/></g></svg>`;
+        const tile = Math.max(12, Math.round(scale / 2.5));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "lightning") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><g fill='${w(0.8)}'><path d='M14 2 L5 18 H11 L8 30 L19 13 H13 L17 2 Z'/><path d='M44 30 L35 46 H41 L38 58 L49 41 H43 L47 30 Z'/></g></svg>`;
+        const tile = Math.max(36, Math.round(scale * 1.1));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "vinyl") {
+        const groove = Math.max(3, Math.round(scale / 12));
+        return `background: radial-gradient(circle at 100% 50%, ${c3} 0 14%, ${d(0.6)} 14.5% 15.5%, transparent 16%), repeating-radial-gradient(circle at 100% 50%, ${d(0.55)} 0 1px, transparent 1px ${groove}px), radial-gradient(circle at 100% 50%, ${w(0.35)} 0%, transparent 70%), ${baseGrad};`;
+      }
+      if (pattern === "music") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><g fill='${w(0.85)}' font-family='serif' font-weight='bold'><text x='4' y='22' font-size='20'>♪</text><text x='32' y='48' font-size='22'>♫</text><text x='38' y='16' font-size='12'>♩</text><text x='8' y='54' font-size='12'>♬</text></g></svg>`;
+        const tile = Math.max(40, Math.round(scale * 1.2));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "synthwave") {
+        const cell = Math.max(10, Math.round(scale / 3));
+        return `background: radial-gradient(circle at 50% 58%, ${c3} 0 20%, transparent 20.5%) 0 0 / 100% 100% no-repeat, repeating-linear-gradient(0deg, ${w(0.8)} 0 1px, transparent 1px ${cell}px) 0 100% / 100% 42% no-repeat, repeating-linear-gradient(90deg, ${w(0.8)} 0 1px, transparent 1px ${cell}px) 0 100% / 100% 42% no-repeat, linear-gradient(180deg, ${c1} 0%, ${c2} 58%, ${c1} 58%, ${c1} 100%);`;
+      }
+      if (pattern === "sunburst") {
+        const ray = Math.max(4, Math.round(scale / 6));
+        return `background: repeating-conic-gradient(from 0deg at 85% 15%, ${w(0.4)} 0deg ${ray}deg, transparent ${ray}deg ${ray * 2}deg), ${baseGrad};`;
+      }
+      if (pattern === "scanlines") {
+        const gap = Math.max(3, Math.round(scale / 12));
+        return `background: repeating-linear-gradient(0deg, ${d(0.6)} 0 1px, transparent 1px ${gap}px), radial-gradient(ellipse at center, transparent 50%, ${d(0.9)} 100%), ${baseGrad};`;
+      }
+      if (pattern === "stripes") {
+        const size = Math.max(10, Math.round(scale / 2.5));
+        return `background: repeating-linear-gradient(45deg, ${w(0.45)} 0 ${size / 2}px, transparent ${size / 2}px ${size}px), ${baseGrad};`;
+      }
+      if (pattern === "checker") {
+        const cell = Math.max(8, Math.round(scale / 3));
+        return `background: conic-gradient(${w(0.4)} 25%, transparent 0 50%, ${w(0.4)} 0 75%, transparent 0) 0 0 / ${cell * 2}px ${cell * 2}px, ${baseGrad};`;
+      }
+      if (pattern === "plaid") {
+        const s = Math.max(4, Math.round(scale / 7));
+        return `background: repeating-linear-gradient(90deg, ${w(0.3)} 0 ${s}px, transparent ${s}px ${s * 3}px), repeating-linear-gradient(0deg, ${d(0.35)} 0 ${s}px, transparent ${s}px ${s * 3}px), ${baseGrad};`;
+      }
+      if (pattern === "zigzag") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'><path d='M0 15 L10 5 L20 15 L30 5 L40 15' fill='none' stroke='${w(0.8)}' stroke-width='2.5' stroke-linejoin='round'/></svg>`;
+        const tileW = Math.max(20, Math.round(scale / 1.5));
+        return svgPattern(svg, tileW, Math.round(tileW / 2));
+      }
+      if (pattern === "triangles") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M0 40 L20 0 L40 40 Z' fill='${w(0.35)}'/><path d='M20 0 L40 40 L40 0 Z' fill='${d(0.3)}'/></svg>`;
+        const tile = Math.max(16, Math.round(scale / 1.8));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "stars") {
+        const star = (x, y, s) => `<path transform='translate(${x} ${y}) scale(${s})' d='M10 0 L12 8 L20 10 L12 12 L10 20 L8 12 L0 10 L8 8 Z'/>`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='${w(0.95)}'>${star(6, 8, 0.9)}${star(50, 4, 0.5)}${star(40, 42, 1.1)}${star(8, 56, 0.45)}${star(64, 62, 0.6)}</g></svg>`;
+        const tile = Math.max(50, Math.round(scale * 1.4));
+        return svgPattern(svg, tile);
+      }
+      if (pattern === "bubbles") {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='${w(0.18)}' stroke='${w(0.7)}' stroke-width='1.5'><circle cx='18' cy='20' r='12'/><circle cx='58' cy='14' r='6'/><circle cx='52' cy='52' r='16'/><circle cx='14' cy='62' r='5'/><circle cx='72' cy='76' r='4'/></g></svg>`;
+        const tile = Math.max(50, Math.round(scale * 1.4));
+        return svgPattern(svg, tile);
+      }
       if (pattern === "prism") {
         return `background: conic-gradient(from ${scale * 2}deg at 75% 30%, rgba(255,255,255,${(opacity * 0.65).toFixed(2)}) 0deg, transparent 45deg, rgba(255,255,255,${(opacity * 0.5).toFixed(2)}) 110deg, transparent 180deg, rgba(255,255,255,${(opacity * 0.65).toFixed(2)}) 250deg, transparent 360deg), ${baseGrad};`;
       }
@@ -789,17 +996,17 @@
       if (pattern === "matrix") {
         const svgMatrix = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><style>text{font-family:monospace;font-weight:bold;font-size:10px;fill:rgba(167,243,208,${opacity});}</style><text x='4' y='12'>1 0 1 A</text><text x='18' y='26'>0 F 9 1</text><text x='6' y='40'>X 7 0 C</text><text x='24' y='54'>1 1 0 Z</text></svg>`;
         const tile = Math.max(38, Math.round(scale * 1.1));
-        return `background-image: url("data:image/svg+xml,${encodeURIComponent(svgMatrix)}"), ${baseGrad}; background-size: ${tile}px ${tile}px, 100% 100%;`;
+        return svgPattern(svgMatrix, tile);
       }
       if (pattern === "animal") {
         const svgAnimal = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='rgba(0,0,0,${opacity})'><path d='M18,14 C26,10 34,18 28,26 C22,33 11,29 12,20 Z'/><path d='M56,18 C65,15 71,25 64,32 C57,38 46,32 49,23 Z'/><path d='M32,48 C43,43 51,54 44,63 C36,70 23,64 26,53 Z'/><circle cx='16' cy='58' r='6'/><circle cx='65' cy='60' r='7'/></g></svg>`;
         const tile = Math.max(44, Math.round(scale * 1.3));
-        return `background-image: url("data:image/svg+xml,${encodeURIComponent(svgAnimal)}"), ${baseGrad}; background-size: ${tile}px ${tile}px, 100% 100%;`;
+        return svgPattern(svgAnimal, tile);
       }
       if (pattern === "waves") {
         const svgWave = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><path d='M0 20 Q 25 5, 50 20 T 100 20' fill='none' stroke='rgba(255,255,255,${opacity})' stroke-width='2.5'/></svg>`;
         const tileW = Math.max(50, Math.round(scale * 1.5));
-        return `background-image: url("data:image/svg+xml,${encodeURIComponent(svgWave)}"), ${baseGrad}; background-size: ${tileW}px ${Math.round(tileW * 0.45)}px, 100% 100%;`;
+        return svgPattern(svgWave, tileW, Math.round(tileW * 0.45));
       }
       return `background: ${baseGrad};`;
     }
@@ -934,7 +1141,7 @@
 
     function renderBgSwatches() {
       const grid = document.getElementById("bgSwatchesGrid");
-      const presetsHtml = BG_PRESETS.map(p => `<button type="button" onclick="applyBg('${p.css}')" title="${p.name}" style="background: ${p.css};" class="w-11 h-11 rounded-xl border border-slate-300 shadow-xs hover:scale-105 transition"></button>`).join("");
+      const presetsHtml = BG_PRESETS.map((p, i) => `<button type="button" onclick="applyBg(BG_PRESETS[${i}].css)" title="${p.name}" style="background: ${p.css};" class="w-11 h-11 rounded-xl border border-slate-300 shadow-xs hover:scale-105 transition"></button>`).join("");
       const customTileHtml = `<button type="button" onclick="document.getElementById('customBgCreator').classList.toggle('hidden')" title="Crear tu propio degradado" style="background: conic-gradient(from 45deg, #fde68a, #fbcfe8, #bae6fd, #bbf7d0, #fde68a);" class="w-11 h-11 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-800 font-bold text-lg hover:scale-105 transition">+</button>`;
       grid.innerHTML = presetsHtml + customTileHtml;
     }
@@ -1144,20 +1351,39 @@
         syncToGitHub();
       });
 
-      document.getElementById("unlockForm").addEventListener("submit", e => {
+      document.getElementById("unlockForm").addEventListener("submit", async e => {
         e.preventDefault();
         const statusMsg = document.getElementById("lockStatusMsg");
-        const inputVal = document.getElementById("ownerPassInput").value.trim();
+        const inputEl = document.getElementById("ownerPassInput");
+        const now = Date.now();
+        const rl = getRateLimitState();
 
-        if (inputVal === OWNER_PASSWORD) {
+        if (rl.lockUntil > now) {
+          statusMsg.textContent = `Bloqueado. Esperá ${Math.ceil((rl.lockUntil - now) / 1000)}s.`;
+          statusMsg.classList.remove("hidden");
+          return;
+        }
+
+        await new Promise(r => setTimeout(r, 300));
+        const candidateHash = await sha256Hex(`${AUTH_SALT}:${inputEl.value.trim()}`);
+
+        if (candidateHash === TARGET_OWNER_HASH) {
+          saveRateLimitState({ attempts: 0, lockUntil: 0 });
           isOwnerMode = true;
-          document.getElementById("ownerPassInput").value = "";
+          inputEl.value = "";
           statusMsg.classList.add("hidden");
           updateOwnerUI();
           lockPopover.classList.add("hidden");
           showToast("Modo Propietario activado");
         } else {
-          statusMsg.textContent = "Código incorrecto (es 2308)";
+          rl.attempts += 1;
+          if (rl.attempts >= 3) {
+            rl.lockUntil = Date.now() + 30000 * Math.pow(2, rl.attempts - 3);
+            statusMsg.textContent = "Demasiados intentos. Bloqueado.";
+          } else {
+            statusMsg.textContent = `Código incorrecto (${3 - rl.attempts} intentos restantes).`;
+          }
+          saveRateLimitState(rl);
           statusMsg.classList.remove("hidden");
         }
       });
