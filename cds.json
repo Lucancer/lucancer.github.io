@@ -1,5 +1,5 @@
 {
-  "bg": "radial-gradient(at 15% 15%, #81d75b 0px, transparent 55%), radial-gradient(at 85% 80%, #78d7dc 0px, transparent 55%), #449ed5",
+  "bg": "radial-gradient(#D6CBB8 1.2px, transparent 1.8px) 0 0 / 22px 22px, linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 100%)",
   "bgCategories": [
     {
       "id": "light",
@@ -8,6 +8,42 @@
     {
       "id": "dark",
       "name": "Oscuros"
+    },
+    {
+      "id": "vapor",
+      "name": "Vaporwave & Frutiger"
+    },
+    {
+      "id": "retro",
+      "name": "Internet viejo / Y2K"
+    },
+    {
+      "id": "cyber",
+      "name": "Cyberpunk & Futuro"
+    },
+    {
+      "id": "redblack",
+      "name": "Rojo y Negro"
+    },
+    {
+      "id": "xbox",
+      "name": "Xbox 360 & Dark Aero"
+    },
+    {
+      "id": "retro80",
+      "name": "Retro 70s–80s"
+    },
+    {
+      "id": "edgy",
+      "name": "Edgy"
+    },
+    {
+      "id": "utopia",
+      "name": "Tech Utopía"
+    },
+    {
+      "id": "japan",
+      "name": "Japonés"
     },
     {
       "id": "cat-1792224638897",
