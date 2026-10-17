@@ -181,7 +181,9 @@
         "Red",
         "Location",
         "DNS",
-        "Buscador"
+        "Buscador",
+        "Cyber",
+        "Seguridad"
       ],
       "design": {
         "c1": "#a7fcf3",
