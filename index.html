@@ -284,7 +284,7 @@
       <!-- Botón Pincel -->
       <button
         id="brushBtn"
-        class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-amber-700 hover:scale-105 transition"
+        class="glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-amber-700 hover:scale-105 transition"
         title="Personalizar Fondo"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -339,7 +339,7 @@
       <div id="lockLoginView">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-semibold text-slate-700">Modo Propietario</span>
-          <span class="text-[10px] mono text-slate-400">¡WHITOSNAKO!</span>
+          <span class="text-[10px] mono text-slate-400">¡WHITESNAKE!</span>
         </div>
         <form id="unlockForm" class="flex items-center gap-1.5">
           <input
@@ -391,14 +391,16 @@
     </div>
 
     <!-- POPOVER PINCEL -->
-    <div id="brushPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl">
-      <div class="flex items-center justify-between mb-3">
+    <div id="brushPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl overflow-y-auto" style="max-height: calc(100vh - 6rem);">
+      <div class="flex items-center justify-between mb-1">
         <span class="text-xs font-semibold text-slate-700">Fondo de la Estantería</span>
         <span class="text-[10px] text-slate-400">Degradados y texturas</span>
       </div>
-      <div id="bgSwatchesGrid" class="grid grid-cols-5 gap-2.5 mb-3 max-h-64 overflow-y-auto p-1"></div>
+      <p class="text-[10px] text-slate-500 mb-2">Tocá un fondo para probarlo. Solo se guarda con el botón <b>Guardar</b>.</p>
+      <!-- Altura fija: si hay muchos fondos, se scrollea adentro -->
+      <div id="bgSwatchesGrid" class="grid grid-cols-5 gap-2.5 h-56 overflow-y-auto p-1.5 content-start rounded-xl bg-white/40 border border-slate-200/70"></div>
 
-      <div id="customBgCreator" class="hidden border-t border-slate-200/80 pt-3 mt-2 space-y-2.5">
+      <div id="customBgCreator" class="hidden border-t border-slate-200/80 pt-3 mt-3 space-y-2.5">
         <span class="text-[11px] font-semibold text-slate-600 block">Crear degradado personalizado</span>
         <div class="grid grid-cols-3 gap-2">
           <label class="flex flex-col items-center text-[10px] text-slate-500 gap-1">
@@ -432,7 +434,23 @@
           </select>
         </div>
         <button id="applyCustomBgBtn" class="w-full py-1.5 rounded-xl bg-slate-800 text-white text-xs font-medium hover:bg-slate-700 transition">
-          Aplicar y Guardar Fondo
+          Agregar a los fondos y probarlo
+        </button>
+      </div>
+
+      <!-- Guardar / Descartar -->
+      <div class="border-t border-slate-200/80 pt-3 mt-3 space-y-2">
+        <p id="bgStatusText" class="text-[11px] text-slate-500"></p>
+        <div class="flex gap-2">
+          <button id="discardBgBtn" type="button" class="flex-1 py-1.5 rounded-xl text-xs font-medium text-slate-600 bg-slate-200/70 hover:bg-slate-300/70 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            Descartar
+          </button>
+          <button id="saveBgBtn" type="button" class="flex-1 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            Guardar
+          </button>
+        </div>
+        <button id="resetVisitorBgBtn" type="button" class="hidden w-full text-[11px] text-slate-500 hover:text-slate-800 underline">
+          Volver al fondo original de la estantería
         </button>
       </div>
     </div>
@@ -696,9 +714,22 @@
     const GH_CONFIG_KEY = "cd_vault_gh_config_v1";
     const STORAGE_CDS_KEY = "cd_bookmarks_collection_v3";
     const STORAGE_BG_KEY = "cd_bookmarks_bg_v3";
+    const STORAGE_BG_LIBRARY_KEY = "cd_bookmarks_bg_library_v1";
 
     let cds = [];
     let currentBg = "linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%)";
+    // Fondos creados por el dueño y fondos de la lista que el dueño borró (guardados en cds.json)
+    let savedCustomBgs = [];
+    let savedHiddenBgs = [];
+
+    function applyBgLibrary(data) {
+      if (Array.isArray(data.customBgs)) savedCustomBgs = data.customBgs.filter(isValidBgEntry);
+      if (Array.isArray(data.hiddenBgs)) savedHiddenBgs = data.hiddenBgs.filter(id => typeof id === "string");
+    }
+
+    function saveBgLibraryLocally() {
+      localStorage.setItem(STORAGE_BG_LIBRARY_KEY, JSON.stringify({ customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs }));
+    }
 
     function getGhConfig() {
       try {
@@ -755,8 +786,10 @@
             currentBg = data.bg;
             document.documentElement.style.setProperty("--bg-gradient", currentBg);
           }
+          applyBgLibrary(data);
           localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
           localStorage.setItem(STORAGE_BG_KEY, currentBg);
+          saveBgLibraryLocally();
           return;
         }
       } catch (e) {
@@ -770,6 +803,9 @@
         currentBg = savedBg;
         document.documentElement.style.setProperty("--bg-gradient", currentBg);
       }
+      try {
+        applyBgLibrary(JSON.parse(localStorage.getItem(STORAGE_BG_LIBRARY_KEY)) || {});
+      } catch {}
     }
 
     // Los guardados se hacen de a uno por vez (en fila) para que dos cambios
@@ -779,6 +815,7 @@
     function syncToGitHub() {
       localStorage.setItem(STORAGE_CDS_KEY, JSON.stringify(cds));
       localStorage.setItem(STORAGE_BG_KEY, currentBg);
+      saveBgLibraryLocally();
 
       const cfg = getGhConfig();
       if (!cfg || !cfg.owner || !cfg.repo || !cfg.token) {
@@ -825,7 +862,7 @@
           throw new Error(`GET ${getRes.status}`);
         }
 
-        const payloadObj = { bg: currentBg, cds: cds };
+        const payloadObj = { bg: currentBg, customBgs: savedCustomBgs, hiddenBgs: savedHiddenBgs, cds: cds };
         const jsonString = JSON.stringify(payloadObj, null, 2);
         const utf8Bytes = new TextEncoder().encode(jsonString);
         let binaryStr = "";
@@ -1162,17 +1199,197 @@
       renderShelf();
     }
 
-    function renderBgSwatches() {
-      const grid = document.getElementById("bgSwatchesGrid");
-      const presetsHtml = BG_PRESETS.map((p, i) => `<button type="button" onclick="applyBg(BG_PRESETS[${i}].css)" title="${p.name}" style="background: ${p.css};" class="w-11 h-11 rounded-xl border border-slate-300 shadow-xs hover:scale-105 transition"></button>`).join("");
-      const customTileHtml = `<button type="button" onclick="document.getElementById('customBgCreator').classList.toggle('hidden')" title="Crear tu propio degradado" style="background: conic-gradient(from 45deg, #fde68a, #fbcfe8, #bae6fd, #bbf7d0, #fde68a);" class="w-11 h-11 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-800 font-bold text-lg hover:scale-105 transition">+</button>`;
-      grid.innerHTML = presetsHtml + customTileHtml;
+    /*************************************************************************
+     * FONDOS: VISTA PREVIA, GUARDADO Y FONDOS PERSONALIZADOS
+     * - Tocar un fondo solo lo prueba (vista previa). Se guarda con "Guardar".
+     * - Propietario: guarda para todos (en cds.json) y puede borrar fondos
+     *   si tiene GitHub vinculado. Los cambios quedan pendientes hasta Guardar.
+     * - Visitantes: pueden elegir y crear fondos solo para su navegador.
+     *************************************************************************/
+    const VISITOR_BG_KEY = "cd_visitor_bg_v1";
+    const VISITOR_CUSTOM_BGS_KEY = "cd_visitor_custom_bgs_v1";
+
+    let previewBg = currentBg;
+    let draftCustomBgs = [];
+    let draftHiddenBgs = [];
+
+    function hasGhApi() {
+      const cfg = getGhConfig();
+      return Boolean(cfg && cfg.owner && cfg.repo && cfg.token);
     }
 
-    function applyBg(cssValue) {
-      currentBg = cssValue;
-      document.documentElement.style.setProperty("--bg-gradient", cssValue);
-      syncToGitHub();
+    // Solo aceptamos CSS de fondo válido y sin caracteres peligrosos
+    function isSafeBgCss(css) {
+      return typeof css === "string" && css.length > 0 && css.length < 3000 &&
+        !/[<>"';{}\\]/.test(css) && CSS.supports("background", css);
+    }
+
+    function isValidBgEntry(b) {
+      return b && typeof b.id === "string" && /^[\w-]+$/.test(b.id) && isSafeBgCss(b.css);
+    }
+
+    function setPageBg(css) {
+      document.documentElement.style.setProperty("--bg-gradient", css);
+    }
+
+    function getVisitorChoice() {
+      try {
+        const v = localStorage.getItem(VISITOR_BG_KEY);
+        return isSafeBgCss(v) ? v : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getVisitorCustomBgs() {
+      try {
+        const list = JSON.parse(localStorage.getItem(VISITOR_CUSTOM_BGS_KEY)) || [];
+        return Array.isArray(list) ? list.filter(isValidBgEntry) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveVisitorCustomBgs(list) {
+      localStorage.setItem(VISITOR_CUSTOM_BGS_KEY, JSON.stringify(list));
+    }
+
+    function getBgEntries() {
+      const presets = BG_PRESETS.filter(p => !draftHiddenBgs.includes(p.id)).map(p => ({ ...p, kind: "preset" }));
+      const shared = draftCustomBgs.filter(isValidBgEntry).map(b => ({ ...b, kind: "shared" }));
+      const local = getVisitorCustomBgs().map(b => ({ ...b, kind: "local" }));
+      return [...presets, ...shared, ...local];
+    }
+
+    function canDeleteBg(entry) {
+      if (entry.kind === "local") return true;
+      return isOwnerMode && hasGhApi();
+    }
+
+    // El fondo "base" con el que comparamos para saber si hay cambios sin guardar
+    function baselineBg() {
+      return isOwnerMode ? currentBg : (getVisitorChoice() || currentBg);
+    }
+
+    function isBgDirty() {
+      if (previewBg !== baselineBg()) return true;
+      if (!isOwnerMode) return false;
+      return JSON.stringify(draftCustomBgs) !== JSON.stringify(savedCustomBgs) ||
+        JSON.stringify(draftHiddenBgs) !== JSON.stringify(savedHiddenBgs);
+    }
+
+    function renderBgSwatches() {
+      const grid = document.getElementById("bgSwatchesGrid");
+      const tilesHtml = getBgEntries().map(e => {
+        const selected = e.css === previewBg;
+        const deleteBtn = canDeleteBg(e)
+          ? `<button type="button" onclick="deleteBgById('${e.id}')" title="Borrar este fondo" class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] leading-none flex items-center justify-center shadow hover:bg-rose-700">✕</button>`
+          : "";
+        const localDot = e.kind === "local"
+          ? `<span title="Solo en este navegador" class="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-sky-500 ring-1 ring-white"></span>`
+          : "";
+        return `<div class="relative">
+          <button type="button" onclick="previewBgById('${e.id}')" title="${escapeHtml(e.name || "Fondo personalizado")}" style="background: ${e.css};" class="w-11 h-11 rounded-xl border shadow-xs hover:scale-105 transition ${selected ? "border-slate-800 ring-2 ring-slate-800 ring-offset-1" : "border-slate-300"}"></button>
+          ${deleteBtn}${localDot}
+        </div>`;
+      }).join("");
+      const customTileHtml = `<button type="button" onclick="document.getElementById('customBgCreator').classList.toggle('hidden')" title="Crear tu propio degradado" style="background: conic-gradient(from 45deg, #fde68a, #fbcfe8, #bae6fd, #bbf7d0, #fde68a);" class="w-11 h-11 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-800 font-bold text-lg hover:scale-105 transition">+</button>`;
+      grid.innerHTML = tilesHtml + customTileHtml;
+      updateBgFooter();
+    }
+
+    function updateBgFooter() {
+      const dirty = isBgDirty();
+      const saveBtn = document.getElementById("saveBgBtn");
+      const discardBtn = document.getElementById("discardBgBtn");
+      const status = document.getElementById("bgStatusText");
+      const resetBtn = document.getElementById("resetVisitorBgBtn");
+
+      saveBtn.disabled = !dirty;
+      discardBtn.disabled = !dirty;
+      saveBtn.textContent = isOwnerMode ? "Guardar para todos" : "Guardar para mí";
+
+      if (isOwnerMode) {
+        const where = hasGhApi() ? "" : " (sin GitHub vinculado: solo en esta PC)";
+        status.textContent = dirty
+          ? `Cambios sin guardar. Al guardar, se aplican para todos${where}.`
+          : "Este es el fondo que ven todos.";
+        status.className = `text-[11px] ${dirty ? "text-amber-700 font-medium" : "text-slate-500"}`;
+      } else {
+        const hasChoice = Boolean(getVisitorChoice());
+        status.textContent = dirty
+          ? "Vista previa. Guardalo para conservarlo en este navegador."
+          : hasChoice ? "Estás usando tu propio fondo." : "Este es el fondo elegido por el dueño.";
+        status.className = `text-[11px] ${dirty ? "text-amber-700 font-medium" : "text-slate-500"}`;
+      }
+      resetBtn.classList.toggle("hidden", isOwnerMode || !getVisitorChoice());
+    }
+
+    function previewBgById(id) {
+      const entry = getBgEntries().find(e => e.id === id);
+      if (!entry) return;
+      previewBg = entry.css;
+      setPageBg(previewBg);
+      renderBgSwatches();
+    }
+
+    function deleteBgById(id) {
+      const entry = getBgEntries().find(e => e.id === id);
+      if (!entry || !canDeleteBg(entry)) return;
+      if (entry.kind === "local") {
+        saveVisitorCustomBgs(getVisitorCustomBgs().filter(b => b.id !== id));
+      } else if (entry.kind === "preset") {
+        draftHiddenBgs = [...draftHiddenBgs, id];
+      } else {
+        draftCustomBgs = draftCustomBgs.filter(b => b.id !== id);
+      }
+      renderBgSwatches();
+    }
+
+    function addCustomBg(css) {
+      if (!isSafeBgCss(css)) return;
+      const entry = { id: "bg-" + Date.now(), name: "Fondo personalizado", css };
+      if (isOwnerMode) {
+        draftCustomBgs = [...draftCustomBgs, entry];
+      } else {
+        saveVisitorCustomBgs([...getVisitorCustomBgs(), entry]);
+      }
+      previewBg = css;
+      setPageBg(previewBg);
+      renderBgSwatches();
+      // Bajamos el scroll de la grilla para que se vea el fondo nuevo
+      const grid = document.getElementById("bgSwatchesGrid");
+      grid.scrollTop = grid.scrollHeight;
+    }
+
+    function saveBgChanges() {
+      if (isOwnerMode) {
+        currentBg = previewBg;
+        savedCustomBgs = JSON.parse(JSON.stringify(draftCustomBgs));
+        savedHiddenBgs = [...draftHiddenBgs];
+        localStorage.removeItem(VISITOR_BG_KEY);
+        syncToGitHub();
+      } else {
+        localStorage.setItem(VISITOR_BG_KEY, previewBg);
+        showToast("Fondo guardado solo para vos en este navegador");
+      }
+      renderBgSwatches();
+    }
+
+    function discardBgChanges() {
+      draftCustomBgs = JSON.parse(JSON.stringify(savedCustomBgs));
+      draftHiddenBgs = [...savedHiddenBgs];
+      previewBg = baselineBg();
+      setPageBg(previewBg);
+      renderBgSwatches();
+    }
+
+    function resetVisitorBg() {
+      localStorage.removeItem(VISITOR_BG_KEY);
+      previewBg = currentBg;
+      setPageBg(previewBg);
+      renderBgSwatches();
+      showToast("Volviste al fondo original de la estantería");
     }
 
     function updateLiveBoxPreview() {
@@ -1290,17 +1507,23 @@
       document.getElementById("lockClosedIcon").classList.toggle("hidden", isOwnerMode);
       document.getElementById("lockOpenIcon").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("ownerDot").classList.toggle("hidden", !isOwnerMode);
-      document.getElementById("brushBtn").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("addCdBtn").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("githubConfigBtn").classList.toggle("hidden", !isOwnerMode);
       document.getElementById("lockLoginView").classList.toggle("hidden", isOwnerMode);
       document.getElementById("lockActiveView").classList.toggle("hidden", !isOwnerMode);
       refreshGhConfigUI();
+      // Al entrar o salir del modo propietario se descartan los cambios de fondo sin guardar
+      discardBgChanges();
       renderShelf();
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
       await loadInitialData();
+      draftCustomBgs = JSON.parse(JSON.stringify(savedCustomBgs));
+      draftHiddenBgs = [...savedHiddenBgs];
+      // Si el visitante eligió su propio fondo, se lo mostramos
+      previewBg = getVisitorChoice() || currentBg;
+      setPageBg(previewBg);
       renderBgSwatches();
       renderSearchDropdownFilters();
       renderShelf();
@@ -1370,6 +1593,7 @@
         };
         localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(cfg));
         refreshGhConfigUI();
+        renderBgSwatches();
         githubPopover.classList.add("hidden");
         syncToGitHub();
       });
@@ -1421,6 +1645,8 @@
         brushPopover.classList.toggle("hidden");
         lockPopover.classList.add("hidden");
         githubPopover.classList.add("hidden");
+        searchOptionsDropdown.classList.add("hidden");
+        renderBgSwatches();
       });
 
       document.getElementById("applyCustomBgBtn").addEventListener("click", () => {
@@ -1430,8 +1656,12 @@
           document.getElementById("bgCustomC3").value,
           document.getElementById("bgCustomStyle").value
         );
-        applyBg(css);
+        addCustomBg(css);
       });
+
+      document.getElementById("saveBgBtn").addEventListener("click", saveBgChanges);
+      document.getElementById("discardBgBtn").addEventListener("click", discardBgChanges);
+      document.getElementById("resetVisitorBgBtn").addEventListener("click", resetVisitorBg);
 
       document.getElementById("addCdBtn").addEventListener("click", openNewCdModal);
       document.getElementById("closeModalBtn").addEventListener("click", closeCdModal);
