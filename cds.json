@@ -1,4 +1,25 @@
 {
   "bg": "radial-gradient(at 15% 15%, #008040 0px, transparent 55%), radial-gradient(at 85% 80%, #000000 0px, transparent 55%), #a4ffa4",
-  "cds": []
+  "cds": [
+    {
+      "id": "cd-1792221942853",
+      "title": "Proyecto Aura",
+      "category": "Proyecto",
+      "url": "https://farmeo-de-aura.netlify.app/",
+      "img": "",
+      "desc": "AURA",
+      "keywords": [
+        "Web"
+      ],
+      "design": {
+        "c1": "#55f2ff",
+        "c2": "#4338ca",
+        "c3": "#ec4899",
+        "pattern": "scanlines",
+        "scale": 50,
+        "opacity": 50,
+        "textColor": "#fef08a"
+      }
+    }
+  ]
 }
