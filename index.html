@@ -320,10 +320,8 @@
   <!-- Firma -->
   <div id="signature" class="signature" aria-label="Firma: Pochincho">Pochincho</div>
 
-  <div id="syncToast" class="fixed bottom-10 right-5 z-50 hidden glass-pill px-4 py-2.5 rounded-2xl text-xs font-medium text-slate-800 shadow-lg items-center gap-2">
-    <span id="syncToastDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-    <span id="syncToastText">Sincronizado con GitHub</span>
-  </div>
+  <!-- Avisos (máximo 3): el más nuevo abajo, los anteriores suben y se difuminan -->
+  <div id="toastStack" class="fixed bottom-10 right-5 z-50 flex flex-col items-end gap-2 pointer-events-none" aria-live="polite"></div>
 
   <!-- BOTÓN DISCO (arriba a la izquierda): cambia entre la Estantería de Pochincho y "Mi estantería" -->
   <div class="fixed top-5 left-5 z-50">
@@ -928,18 +926,81 @@
       }
     }
 
-    function showToast(msg, isError = false) {
-      const toast = document.getElementById("syncToast");
-      const dot = document.getElementById("syncToastDot");
-      const text = document.getElementById("syncToastText");
-      dot.className = `w-2 h-2 rounded-full ${isError ? "bg-rose-500" : "bg-emerald-500"}`;
-      text.textContent = msg;
-      toast.classList.remove("hidden");
-      toast.classList.add("flex");
-      setTimeout(() => {
-        toast.classList.add("hidden");
-        toast.classList.remove("flex");
-      }, 3500);
+    /*************************************************************************
+     * AVISOS (abajo a la derecha)
+     * - Máximo 3 a la vez: el más nuevo abajo, los anteriores suben y se difuminan.
+     * - Pueden tener un botón "Deshacer".
+     * - Con el mouse encima, el aviso espera y no se va.
+     * - Los que tienen "key" se actualizan en el lugar (ej: "Subiendo..." → "¡Guardado!").
+     *************************************************************************/
+    const MAX_TOASTS = 3;
+    let toasts = [];   // del más viejo al más nuevo
+
+    function showToast(msg, isError = false, opts = {}) {
+      const stack = document.getElementById("toastStack");
+      let t = opts.key ? toasts.find(x => x.key === opts.key) : null;
+
+      if (!t) {
+        const el = document.createElement("div");
+        el.className = "pointer-events-auto glass-pill rounded-2xl px-4 py-2.5 text-xs font-medium text-slate-800 shadow-lg flex items-center gap-2 max-w-[min(90vw,380px)]";
+        el.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+        el.style.opacity = "0";
+        el.style.transform = "translateY(8px)";
+        el.innerHTML = `<span class="toast-dot w-2 h-2 rounded-full shrink-0"></span><span class="toast-text"></span>`;
+        t = { el, key: opts.key || null, timer: null, remaining: 0 };
+        el.addEventListener("mouseenter", () => clearTimeout(t.timer));
+        el.addEventListener("mouseleave", () => startToastTimer(t, 2500));
+        stack.appendChild(el);
+        toasts.push(t);
+        setTimeout(restyleToasts, 20);   // deja que el navegador lo dibuje antes de animarlo
+        // Si hay más de 3, se va el más viejo
+        while (toasts.length > MAX_TOASTS) dismissToast(toasts[0]);
+      }
+
+      t.el.querySelector(".toast-dot").className = `toast-dot w-2 h-2 rounded-full shrink-0 ${isError ? "bg-rose-500" : "bg-emerald-500"}`;
+      t.el.querySelector(".toast-text").textContent = msg;
+      const oldBtn = t.el.querySelector(".toast-undo");
+      if (oldBtn) oldBtn.remove();
+      if (typeof opts.undo === "function") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "toast-undo ml-1 shrink-0 font-semibold text-indigo-700 hover:text-indigo-900 underline underline-offset-2";
+        btn.textContent = "Deshacer";
+        btn.addEventListener("click", () => {
+          dismissToast(t);
+          opts.undo();
+        });
+        t.el.appendChild(btn);
+      }
+      startToastTimer(t, opts.duration || (opts.undo ? 8000 : 3500));
+      return t;
+    }
+
+    function startToastTimer(t, ms) {
+      clearTimeout(t.timer);
+      t.timer = setTimeout(() => dismissToast(t), ms);
+    }
+
+    function dismissToast(t) {
+      if (!toasts.includes(t)) return;
+      clearTimeout(t.timer);
+      toasts = toasts.filter(x => x !== t);
+      t.el.style.pointerEvents = "none";
+      t.el.style.opacity = "0";
+      t.el.style.transform = "translateY(-8px) scale(0.96)";
+      setTimeout(() => t.el.remove(), 300);
+      restyleToasts();
+    }
+
+    // El más nuevo se ve completo; los de arriba, cada vez más transparentes y chicos
+    function restyleToasts() {
+      const n = toasts.length;
+      toasts.forEach((t, i) => {
+        const age = n - 1 - i;   // 0 = el más nuevo
+        t.el.style.opacity = String([1, 0.65, 0.4][age] ?? 0.3);
+        t.el.style.transform = `translateY(0) scale(${[1, 0.97, 0.94][age] ?? 0.92})`;
+        t.el.style.transformOrigin = "right center";
+      });
     }
 
     // Si este navegador tiene GitHub vinculado, lee cds.json directo del repo
@@ -1008,11 +1069,11 @@
 
       const cfg = getGhConfig();
       if (!cfg || !cfg.owner || !cfg.repo || !cfg.token) {
-        showToast("Guardado en esta PC (Vinculá GitHub en el ícono)");
+        showToast("Guardado en esta PC (Vinculá GitHub en el ícono)", false, { key: "sync" });
         return;
       }
 
-      showToast("Subiendo cambios a GitHub...");
+      showToast("Subiendo cambios a GitHub...", false, { key: "sync", duration: 15000 });
       syncQueue = syncQueue.then(() => pushToGitHub(cfg));
       return syncQueue;
     }
@@ -1085,10 +1146,10 @@
           }
           throw new Error(`PUT ${putRes.status}`);
         }
-        showToast("¡Guardado en GitHub correctamente!");
+        showToast("¡Guardado en GitHub correctamente!", false, { key: "sync" });
       } catch (err) {
         console.error(err);
-        showToast(ghErrorMessage(status), true);
+        showToast(ghErrorMessage(status), true, { key: "sync", duration: 6000 });
       }
     }
 
@@ -2027,11 +2088,58 @@
 
     function deleteCd(id) {
       if (!canEditCurrentShelf()) return;
+      const index = cds.findIndex(c => c.id === id);
+      if (index === -1) return;
+      const removed = cds[index];
+      const nextId = cds[index + 1]?.id;   // el disco que estaba después
+      const prevId = cds[index - 1]?.id;   // el disco que estaba antes
+      const mode = shelfMode;
       cds = cds.filter(c => c.id !== id);
       renderSearchDropdownFilters();
       renderShelf();
-      persistCds();
+      persistCds({
+        message: `Borraste "${shortTitle(removed)}"`,
+        // Deshacer: lo vuelve a poner al lado de sus vecinos de antes
+        undo: () => changeShelf(mode, list => {
+          if (list.some(c => c.id === removed.id)) return list;
+          let at = list.findIndex(c => c.id === nextId);
+          if (at === -1) {
+            const prev = list.findIndex(c => c.id === prevId);
+            at = prev === -1 ? Math.min(index, list.length) : prev + 1;
+          }
+          return [...list.slice(0, at), removed, ...list.slice(at)];
+        })
+      });
       updateShelfUI();
+    }
+
+    function shortTitle(cd) {
+      const t = (cd && cd.title) || "disco";
+      return t.length > 28 ? t.slice(0, 27) + "…" : t;
+    }
+
+    // Aplica un cambio a una estantería (aunque no sea la que se está viendo) y la guarda.
+    // Se usa para "Deshacer".
+    function changeShelf(mode, fn) {
+      if (mode === "owner" && !isOwnerMode) {
+        showToast("Entrá al Modo Admin para deshacer ese cambio.", true);
+        return;
+      }
+      const current = mode === "mine" ? myCds : ownerCds;
+      const next = fn(current);
+      if (mode === "mine") {
+        const previous = myCds;
+        myCds = next;
+        if (!saveMyCds()) { myCds = previous; return; }
+      } else {
+        ownerCds = next;
+        syncToGitHub();
+      }
+      if (shelfMode === mode) cds = next;
+      renderSearchDropdownFilters();
+      renderShelf();
+      updateShelfUI();
+      showToast("Listo, se deshizo el cambio");
     }
 
     /*************************************************************************
@@ -2111,13 +2219,16 @@
       }
     }
 
-    // Guarda la estantería que se está mostrando donde corresponde
-    function persistCds() {
+    // Guarda la estantería que se está mostrando donde corresponde.
+    // opts.message: texto del aviso; opts.undo: función para el botón "Deshacer".
+    function persistCds(opts = {}) {
+      const toastOpts = typeof opts.undo === "function" ? { undo: opts.undo } : {};
       if (shelfMode === "mine") {
         myCds = cds;
-        if (saveMyCds()) showToast("Guardado en Mi estantería (en este navegador)");
+        if (saveMyCds()) showToast(opts.message || "Guardado en Mi estantería (en este navegador)", false, toastOpts);
       } else {
         ownerCds = cds;
+        if (opts.message) showToast(opts.message, false, toastOpts);
         syncToGitHub();
       }
     }
@@ -2205,7 +2316,12 @@
       updateShelfUI();
       renderSearchDropdownFilters();
       renderShelf();
-      showToast(`Se agregaron ${added.length} disco${added.length === 1 ? "" : "s"}${skipped ? ` (${skipped} repetidos o inválidos se saltearon)` : ""}`);
+      const addedIds = new Set(added.map(c => c.id));
+      showToast(
+        `Se agregaron ${added.length} disco${added.length === 1 ? "" : "s"}${skipped ? ` (${skipped} repetidos o inválidos se saltearon)` : ""}`,
+        false,
+        added.length ? { undo: () => changeShelf("mine", list => list.filter(c => !addedIds.has(c.id))) } : {}
+      );
     }
 
     function refreshGhConfigUI() {
@@ -2470,7 +2586,7 @@
 
         const editId = document.getElementById("editCdId").value;
         const cdData = sanitizeCd({
-          id: editId || "cd-" + Date.now(),
+          id: editId || `cd-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           title: document.getElementById("cdTitleInput").value.trim(),
           category: document.getElementById("cdCategoryInput").value.trim() || "General",
           url: document.getElementById("cdUrlInput").value.trim(),
@@ -2492,16 +2608,25 @@
           return;
         }
 
+        const mode = shelfMode;
+        let message, undo;
         if (editId) {
+          const before = cds.find(c => c.id === editId);
           cds = cds.map(c => (c.id === editId ? cdData : c));
+          message = `Editaste "${shortTitle(cdData)}"`;
+          // Deshacer: vuelve a la versión anterior del disco
+          undo = before ? () => changeShelf(mode, list => list.map(c => (c.id === editId ? before : c))) : null;
         } else {
           cds = [cdData, ...cds];
+          message = `Agregaste "${shortTitle(cdData)}"`;
+          // Deshacer: saca el disco recién creado
+          undo = () => changeShelf(mode, list => list.filter(c => c.id !== cdData.id));
         }
 
         renderSearchDropdownFilters();
         renderShelf();
         closeCdModal();
-        persistCds();
+        persistCds({ message, undo });
         updateShelfUI();
       });
     });
