@@ -184,18 +184,18 @@
         "Buscador"
       ],
       "design": {
-        "c1": "#4e8c4a",
-        "c2": "#57a869",
-        "c3": "#000000",
+        "c1": "#a7fcf3",
+        "c2": "#88c6dd",
+        "c3": "#348d5c",
         "pattern": "scanlines",
         "scale": 44,
         "opacity": 90,
-        "colorCount": 1,
+        "colorCount": 3,
         "patternColor": "",
         "rotation": 0,
         "randomness": 0,
         "seed": 668501,
-        "textColor": "#fef08a"
+        "textColor": "#ffffff"
       }
     },
     {
