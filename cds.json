@@ -151,7 +151,9 @@
         "Anti",
         "Buscador",
         "Virtual",
-        "Machine"
+        "Machine",
+        "Cyber",
+        "Seguridad"
       ],
       "design": {
         "c1": "#6b6b6b",
