@@ -490,7 +490,7 @@
       <div id="lockLoginView">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-semibold text-slate-700">Modo Admin</span>
-          <span class="text-[10px] mono text-slate-400">¡WHITOSNAKO!</span>
+          <span class="text-[10px] mono text-slate-400">¡WHITESNAKE!</span>
         </div>
         <form id="unlockForm" class="flex items-center gap-1.5">
           <input
@@ -856,6 +856,27 @@
                   <span id="opacityValLabel">45%</span>
                 </div>
                 <input id="boxPatternOpacity" type="range" min="10" max="90" value="45" class="w-full accent-slate-800 cursor-pointer" />
+              </div>
+            </div>
+
+            <!-- Rotación y Aleatoriedad (solo en los patrones que las admiten) -->
+            <div id="patternExtraControls" class="grid grid-cols-2 gap-3">
+              <div id="rotationControl">
+                <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                  <span>Rotación</span>
+                  <span id="rotationValLabel">0°</span>
+                </div>
+                <input id="boxPatternRotation" type="range" min="0" max="360" step="5" value="0" class="w-full accent-slate-800 cursor-pointer" />
+              </div>
+              <div id="randomControl">
+                <div class="flex justify-between items-center text-[10px] text-slate-500 mb-0.5">
+                  <span>Aleatoriedad</span>
+                  <span class="flex items-center gap-1">
+                    <span id="randomValLabel">0%</span>
+                    <button type="button" id="reshuffleBtn" title="Probar otra combinación al azar" class="w-5 h-5 rounded-md hover:bg-slate-200 flex items-center justify-center text-xs leading-none">🎲</button>
+                  </span>
+                </div>
+                <input id="boxPatternRandom" type="range" min="0" max="100" value="0" class="w-full accent-slate-800 cursor-pointer" />
               </div>
             </div>
 
@@ -1649,12 +1670,109 @@
       const d = k => `rgba(0,0,0,${(opacity * k).toFixed(2)})`;
       // SVG embebido con comillas simples, para no romper el atributo style="..."
       const svgUrl = svg => `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, "%27")}')`;
-      const svgPattern = (svg, tileW, tileH = tileW) =>
-        `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: ${tileW}px ${tileH}px, 100% 100%;`;
+      // Rotación (0–360°) y aleatoriedad (0–1) del patrón; "seed" hace que cada disco tenga su propio desorden
+      const rot = Math.min(360, Math.max(0, Number(design?.rotation) || 0)) % 360;
+      const rnd = Math.min(1, Math.max(0, (Number(design?.randomness) || 0) / 100));
+      const seed = Math.max(1, Math.round(Number(design?.seed) || 1));
+
+      // Con rotación, el patrón repetido se dibuja girado dentro de una "hoja" SVG que cubre la tapa
+      const rotatedSheet = (svg, tileW, tileH, withBase = true) => {
+        const open = svg.match(/^<svg[^>]*>/)[0];
+        const ow = (open.match(/width='([\d.]+)'/) || [])[1] || tileW;
+        const oh = (open.match(/height='([\d.]+)'/) || [])[1] || tileH;
+        let fitted = open.replace(/width='[\d.]+'/, `width='${tileW}'`).replace(/height='[\d.]+'/, `height='${tileH}'`);
+        if (!/viewBox=/.test(fitted)) fitted = fitted.replace("<svg", `<svg viewBox='0 0 ${ow} ${oh}'`);
+        fitted = fitted.replace("<svg", "<svg preserveAspectRatio='none'") + svg.slice(open.length);
+        const sheet = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'><defs><pattern id='rp' width='${tileW}' height='${tileH}' patternUnits='userSpaceOnUse' patternTransform='rotate(${rot} 140 140)'>${fitted}</pattern></defs><rect width='280' height='280' fill='url(#rp)'/></svg>`;
+        return withBase
+          ? `background-image: ${svgUrl(sheet)}, ${baseGrad}; background-size: cover, 100% 100%; background-position: center, 0 0; background-repeat: no-repeat;`
+          : `background-image: ${svgUrl(sheet)}; background-size: cover; background-position: center; background-repeat: no-repeat;`;
+      };
+
+      const svgPattern = (svg, tileW, tileH = tileW) => rot
+        ? rotatedSheet(svg, tileW, tileH)
+        : `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: ${tileW}px ${tileH}px, 100% 100%;`;
+
+      // Figuras sueltas desparramadas: con aleatoriedad cambian posición, giro, tamaño y tipo
+      const scatterSheet = (shapes, cell, defs = "", overlay = null) => {
+        const rand = i => seeded(seed * 977 + i);
+        const rowH = cell * 0.87;
+        const cols = Math.ceil(280 / cell) + 1, rows = Math.ceil(280 / rowH) + 1;
+        let out = "", i = 0;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++, i++) {
+            if (rnd > 0 && rand(i * 7 + 4) < 0.22 * rnd) continue;   // algunos huecos al azar
+            const x = c * cell + (r % 2 ? cell / 2 : 0) + (rand(i * 7) - 0.5) * cell * 1.1 * rnd;
+            const y = r * rowH + (rand(i * 7 + 1) - 0.5) * cell * 1.1 * rnd;
+            const angle = rot + (rand(i * 7 + 2) - 0.5) * 360 * rnd;
+            const s = 1 + (rand(i * 7 + 3) - 0.5) * 0.9 * rnd;
+            const shapeIdx = rnd > 0 ? Math.floor(rand(i * 7 + 5) * shapes.length) : (r + c) % shapes.length;
+            // Cada figura se dibuja una vez (en <defs>) y acá solo se reutiliza: el SVG queda mucho más liviano
+            out += `<use href='#s${shapeIdx}' transform='translate(${x.toFixed(0)} ${y.toFixed(0)}) rotate(${angle.toFixed(0)}) scale(${s.toFixed(2)})'/>`;
+          }
+        }
+        const shapeDefs = shapes.map((sh, idx) => `<g id='s${idx}'>${sh}</g>`).join("");
+        const sheet = `<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'><defs>${defs}${shapeDefs}</defs>${out}</svg>`;
+        if (overlay) {
+          return `background-image: ${overlay}, ${svgUrl(sheet)}, ${baseGrad}; background-size: 100% 100%, cover, 100% 100%; background-position: 0 0, center, 0 0; background-repeat: no-repeat;`;
+        }
+        return `background-image: ${svgUrl(sheet)}, ${baseGrad}; background-size: cover, 100% 100%; background-position: center, 0 0; background-repeat: no-repeat;`;
+      };
       // SVG que cubre toda la tapa (no se repite)
       const svgCover = svg =>
         `background-image: ${svgUrl(svg)}, ${baseGrad}; background-size: cover, 100% 100%; background-position: center, 0 0; background-repeat: no-repeat;`;
       const op = k => Math.min(1, opacity * k).toFixed(2);   // opacidad para usar dentro de los SVG
+
+      // Patrones de figuras sueltas: con rotación o aleatoriedad se dibujan desparramadas
+      const cell = Math.max(32, Math.round(scale * 0.8));
+      const k = cell / 40;   // tamaño de cada figura según la escala
+      const HEART = "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z";
+      const SPARKLE = "M0-10C1-2 2-1 10 0C2 1 1 2 0 10C-1 2-2 1-10 0C-2-1-1-2 0-10Z";
+      const SCATTER = {
+        hearts: () => [
+          `<path transform='scale(${k}) translate(-12 -12)' d='${HEART}' fill='#fff' fill-opacity='${op(2)}'/>`,
+          `<path transform='scale(${k * 0.7}) translate(-12 -12)' d='${HEART}' fill='${c3}' fill-opacity='${op(2.2)}'/>`
+        ],
+        stars: () => [
+          `<path transform='scale(${k * 1.1})' d='${SPARKLE}' fill='#fff' fill-opacity='${op(2)}'/>`,
+          `<path transform='scale(${k * 0.6})' d='${SPARKLE}' fill='#fff' fill-opacity='${op(1.6)}'/>`
+        ],
+        bubbles: () => [
+          `<circle r='${(cell * 0.3).toFixed(1)}' fill='${w(0.18)}' stroke='${w(0.8)}' stroke-width='1.5'/>`,
+          `<circle r='${(cell * 0.15).toFixed(1)}' fill='${w(0.18)}' stroke='${w(0.8)}' stroke-width='1.2'/>`
+        ],
+        sakura: () => {
+          const petals = [0, 72, 144, 216, 288].map(a => `<path transform='rotate(${a})' d='M0 0C-6 -5 -7 -14 -3 -18L0 -15L3 -18C7 -14 6 -5 0 0Z'/>`).join("");
+          return [
+            `<g transform='scale(${k * 0.9})' fill='${c3}'>${petals}<circle r='2.6' fill='#fff'/></g>`,
+            `<path transform='scale(${k})' d='M0 6C-4 2 -4 -4 0 -6C4 -4 4 2 0 6Z' fill='${c3}' fill-opacity='0.8'/>`
+          ];
+        },
+        music: () => ["♪", "♫", "♩", "♬"].map(n => `<text text-anchor='middle' dominant-baseline='central' font-family='serif' font-weight='bold' font-size='${(cell * 0.55).toFixed(0)}' fill='${w(1.7)}'>${n}</text>`),
+        lightning: () => [`<path transform='scale(${k * 1.2}) translate(-12 -16)' d='M14 2L5 18H11L8 30L19 13H13L17 2Z' fill='${w(1.6)}'/>`],
+        memphis: () => [
+          `<path transform='scale(${k})' d='M-12 0q4 -6 8 0t8 0t8 0' fill='none' stroke='${c3}' stroke-width='3.5' stroke-linecap='round'/>`,
+          `<path transform='scale(${k})' d='M0 -9l9 15h-18z' fill='none' stroke='#fff' stroke-width='2.5' stroke-opacity='${op(2)}'/>`,
+          `<circle r='${(7 * k).toFixed(1)}' fill='${c3}' fill-opacity='${op(2)}'/>`,
+          `<circle r='${(7 * k).toFixed(1)}' fill='none' stroke='#000' stroke-width='2.5' stroke-opacity='${op(2)}'/>`,
+          `<g fill='#fff' fill-opacity='${op(2)}' transform='scale(${k})'><circle cx='-4' cy='-3' r='1.8'/><circle cx='0' cy='-3' r='1.8'/><circle cx='4' cy='-3' r='1.8'/><circle cx='-4' cy='3' r='1.8'/><circle cx='0' cy='3' r='1.8'/><circle cx='4' cy='3' r='1.8'/></g>`
+        ],
+        animal: () => [
+          `<path transform='scale(${k})' d='M-8 -4C-2 -9 7 -4 4 4C1 10 -10 8 -9 0Z' fill='#000' fill-opacity='${op(1)}'/>`,
+          `<circle r='${(5 * k).toFixed(1)}' fill='#000' fill-opacity='${op(1)}'/>`
+        ],
+        frutiger: () => [
+          `<g><circle r='${(cell * 0.32).toFixed(1)}' fill='url(#b)' stroke='#fff' stroke-opacity='${op(1.4)}'/><ellipse cx='${(-cell * 0.1).toFixed(1)}' cy='${(-cell * 0.14).toFixed(1)}' rx='${(cell * 0.13).toFixed(1)}' ry='${(cell * 0.06).toFixed(1)}' fill='#fff' fill-opacity='${op(1.8)}' transform='rotate(-28)'/></g>`,
+          `<circle r='${(cell * 0.14).toFixed(1)}' fill='url(#b)' stroke='#fff' stroke-opacity='${op(1.4)}'/>`
+        ]
+      };
+      if (SCATTER[pattern] && (rot || rnd)) {
+        if (pattern === "frutiger") {
+          const defs = `<radialGradient id='b' cx='35%' cy='30%' r='70%'><stop offset='0' stop-color='#fff' stop-opacity='${op(2)}'/><stop offset='0.4' stop-color='#fff' stop-opacity='${op(0.5)}'/><stop offset='1' stop-color='#fff' stop-opacity='${op(0.15)}'/></radialGradient>`;
+          return scatterSheet(SCATTER.frutiger(), cell * 1.5, defs, `linear-gradient(180deg, ${w(1.6)} 0%, ${w(0.6)} 46%, transparent 47%)`);
+        }
+        return scatterSheet(SCATTER[pattern](), cell);
+      }
 
       if (pattern === "smooth") return `background: ${baseGrad};`;
 
@@ -1764,7 +1882,7 @@
       /* ----- Edgy ----- */
       if (pattern === "hazard") {
         const s = Math.max(10, Math.round(scale / 2.5));
-        return `background: repeating-linear-gradient(-45deg, ${d(2)} 0 ${s}px, transparent ${s}px ${s * 2}px), ${baseGrad};`;
+        return `background: repeating-linear-gradient(${-45 + rot}deg, ${d(2)} 0 ${s}px, transparent ${s}px ${s * 2}px), ${baseGrad};`;
       }
       if (pattern === "diamondplate") {
         const svg = diamondPlateTile("transparent", w(1.5), d(1.5));
@@ -1780,7 +1898,9 @@
       /* ----- Japonés ----- */
       if (pattern === "seigaiha") {
         const tileW = Math.max(24, Math.round(scale * 0.9));
-        return `background-image: ${svgUrl(seigaihaTile(c3, c1, Math.min(1, opacity * 1.8)))}; background-size: ${tileW}px ${tileW / 2}px;`;
+        const tileSvg = seigaihaTile(c3, c1, Math.min(1, opacity * 1.8));
+        if (rot) return rotatedSheet(tileSvg, tileW, tileW / 2, false);
+        return `background-image: ${svgUrl(tileSvg)}; background-size: ${tileW}px ${tileW / 2}px;`;
       }
       if (pattern === "asanoha") {
         const t = asanohaTile("#fff", Math.min(1, opacity * 1.6));
@@ -1850,7 +1970,7 @@
       }
       if (pattern === "stripes") {
         const size = Math.max(10, Math.round(scale / 2.5));
-        return `background: repeating-linear-gradient(45deg, ${w(0.45)} 0 ${size / 2}px, transparent ${size / 2}px ${size}px), ${baseGrad};`;
+        return `background: repeating-linear-gradient(${45 + rot}deg, ${w(0.45)} 0 ${size / 2}px, transparent ${size / 2}px ${size}px), ${baseGrad};`;
       }
       if (pattern === "checker") {
         const cell = Math.max(8, Math.round(scale / 3));
@@ -1858,7 +1978,7 @@
       }
       if (pattern === "plaid") {
         const s = Math.max(4, Math.round(scale / 7));
-        return `background: repeating-linear-gradient(90deg, ${w(0.3)} 0 ${s}px, transparent ${s}px ${s * 3}px), repeating-linear-gradient(0deg, ${d(0.35)} 0 ${s}px, transparent ${s}px ${s * 3}px), ${baseGrad};`;
+        return `background: repeating-linear-gradient(${90 + rot}deg, ${w(0.3)} 0 ${s}px, transparent ${s}px ${s * 3}px), repeating-linear-gradient(${rot}deg, ${d(0.35)} 0 ${s}px, transparent ${s}px ${s * 3}px), ${baseGrad};`;
       }
       if (pattern === "zigzag") {
         const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'><path d='M0 15 L10 5 L20 15 L30 5 L40 15' fill='none' stroke='${w(0.8)}' stroke-width='2.5' stroke-linejoin='round'/></svg>`;
@@ -2610,6 +2730,25 @@
       showToast("Volviste al fondo original de la estantería");
     }
 
+    /* Patrones que admiten Rotación y Aleatoriedad */
+    const RANDOMIZABLE_PATTERNS = ["hearts", "stars", "bubbles", "sakura", "music", "lightning", "memphis", "animal", "frutiger"];
+    const ROTATABLE_PATTERNS = [...RANDOMIZABLE_PATTERNS, "snake", "zigzag", "triangles", "matrix", "waves", "pixel", "zebra",
+      "circuit", "honeycomb", "topo", "diamondplate", "asanoha", "seigaiha", "stripes", "hazard", "plaid"];
+    let currentModalSeed = 1;
+
+    function newPatternSeed() {
+      return 1 + Math.floor(Math.random() * 999998);
+    }
+
+    // Muestra u oculta las barras según el patrón elegido
+    function updatePatternControls(pattern) {
+      const canRotate = ROTATABLE_PATTERNS.includes(pattern);
+      const canRandom = RANDOMIZABLE_PATTERNS.includes(pattern);
+      document.getElementById("rotationControl").classList.toggle("hidden", !canRotate);
+      document.getElementById("randomControl").classList.toggle("hidden", !canRandom);
+      document.getElementById("patternExtraControls").classList.toggle("hidden", !canRotate && !canRandom);
+    }
+
     function updateLiveBoxPreview() {
       const c1 = document.getElementById("boxColor1").value;
       const c2 = document.getElementById("boxColor2").value;
@@ -2617,13 +2756,18 @@
       const pattern = document.getElementById("boxPatternSelect").value;
       const scale = document.getElementById("boxPatternScale").value;
       const opacity = document.getElementById("boxPatternOpacity").value;
+      const rotation = Number(document.getElementById("boxPatternRotation").value);
+      const randomness = Number(document.getElementById("boxPatternRandom").value);
       const title = document.getElementById("cdTitleInput").value || "Título de Ejemplo";
 
       document.getElementById("scaleValLabel").textContent = `${scale}%`;
       document.getElementById("opacityValLabel").textContent = `${opacity}%`;
+      document.getElementById("rotationValLabel").textContent = `${rotation}°`;
+      document.getElementById("randomValLabel").textContent = `${randomness}%`;
+      updatePatternControls(pattern);
 
       const previewEl = document.getElementById("liveBoxPreview");
-      previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, pattern, scale, opacity })} color: ${currentModalTextColor};`);
+      previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, pattern, scale, opacity, rotation, randomness, seed: currentModalSeed })} color: ${currentModalTextColor};`);
       document.querySelector("#livePreviewText p:last-child").textContent = title;
 
       const imgVal = document.getElementById("cdImgInput").value.trim();
@@ -2665,6 +2809,9 @@
       document.getElementById("imgStatusBadge").textContent = "URL o Archivo de tu PC";
       modalKeywords = [];
       renderModalKeywords();
+      document.getElementById("boxPatternRotation").value = 0;
+      document.getElementById("boxPatternRandom").value = 0;
+      currentModalSeed = newPatternSeed();
       updateLiveBoxPreview();
       document.getElementById("cdModal").classList.replace("hidden", "flex");
     }
@@ -2689,6 +2836,9 @@
       document.getElementById("boxPatternSelect").value = item.design?.pattern || "prism";
       document.getElementById("boxPatternScale").value = item.design?.scale ?? 50;
       document.getElementById("boxPatternOpacity").value = item.design?.opacity ?? 45;
+      document.getElementById("boxPatternRotation").value = item.design?.rotation ?? 0;
+      document.getElementById("boxPatternRandom").value = item.design?.randomness ?? 0;
+      currentModalSeed = item.design?.seed || newPatternSeed();
       currentModalTextColor = item.design?.textColor || "#ffffff";
       updateLiveBoxPreview();
       document.getElementById("cdModal").classList.replace("hidden", "flex");
@@ -2807,6 +2957,9 @@
           pattern: patterns.includes(d.pattern) ? d.pattern : "prism",
           scale: clampNum(d.scale, 15, 100, 50),
           opacity: clampNum(d.opacity, 10, 90, 45),
+          rotation: clampNum(d.rotation, 0, 360, 0),
+          randomness: clampNum(d.randomness, 0, 100, 0),
+          seed: Math.round(clampNum(d.seed, 1, 999999, 1)),
           textColor: HEX_COLOR.test(d.textColor) ? d.textColor : "#ffffff"
         }
       };
@@ -3180,7 +3333,15 @@
         btn.addEventListener("click", () => addModalKeywordFromStr(btn.dataset.quicktag));
       });
 
-      ["boxColor1", "boxColor2", "boxColor3", "boxPatternSelect", "boxPatternScale", "boxPatternOpacity", "cdTitleInput", "cdImgInput"].forEach(id => {
+      // 🎲: otra combinación al azar (si la aleatoriedad estaba en 0, la sube a 50%)
+      document.getElementById("reshuffleBtn").addEventListener("click", () => {
+        currentModalSeed = newPatternSeed();
+        const randInput = document.getElementById("boxPatternRandom");
+        if (Number(randInput.value) === 0) randInput.value = 50;
+        updateLiveBoxPreview();
+      });
+
+      ["boxColor1", "boxColor2", "boxColor3", "boxPatternSelect", "boxPatternScale", "boxPatternOpacity", "boxPatternRotation", "boxPatternRandom", "cdTitleInput", "cdImgInput"].forEach(id => {
         document.getElementById(id).addEventListener("input", updateLiveBoxPreview);
       });
 
@@ -3212,6 +3373,9 @@
             pattern: document.getElementById("boxPatternSelect").value,
             scale: Number(document.getElementById("boxPatternScale").value),
             opacity: Number(document.getElementById("boxPatternOpacity").value),
+            rotation: Number(document.getElementById("boxPatternRotation").value),
+            randomness: Number(document.getElementById("boxPatternRandom").value),
+            seed: currentModalSeed,
             textColor: currentModalTextColor
           }
         });
