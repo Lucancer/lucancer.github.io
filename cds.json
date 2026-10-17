@@ -268,7 +268,9 @@
         "Web",
         "Detector",
         "Anti",
-        "Virus"
+        "Virus",
+        "Cyber",
+        "Seguridad"
       ],
       "design": {
         "c1": "#5ba6f9",
