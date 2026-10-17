@@ -1162,6 +1162,16 @@
       return (str || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
+    // Solo dejamos abrir links http/https (evita links raros tipo "javascript:")
+    function safeLinkUrl(url) {
+      try {
+        const u = new URL(url);
+        return u.protocol === "http:" || u.protocol === "https:" ? u.href : "#";
+      } catch {
+        return "#";
+      }
+    }
+
     function cleanDomain(url) {
       try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
     }
@@ -1208,7 +1218,7 @@
                 <div class="cd-center-ring"><div class="cd-center-hole"></div></div>
               </div>
             </div>
-            <div class="jewel-case" style="${boxStyle} color: ${textColor};" onclick="window.open('${cd.url.replace(/'/g, "\\'")}', '_blank', 'noopener,noreferrer')">
+            <a class="jewel-case" href="${escapeHtml(safeLinkUrl(cd.url))}" target="_blank" rel="noopener noreferrer" style="${boxStyle} color: ${textColor};" title="${escapeHtml(cd.title)}">
               <div class="jewel-spine">
                 <span class="spine-text mono">${escapeHtml(cd.category || "BOOKMARK")} • CD-${trackNum}</span>
               </div>
@@ -1216,7 +1226,7 @@
                 <div class="flex items-start justify-between gap-2">
                   <span class="mono text-[10px] font-bold tracking-widest px-2 py-0.5 rounded bg-black/25">TRK #${trackNum}</span>
                   ${isOwnerMode ? `
-                    <div class="flex items-center gap-1 z-30" onclick="event.stopPropagation()">
+                    <div class="flex items-center gap-1 z-30" onclick="event.preventDefault(); event.stopPropagation()" onauxclick="event.preventDefault(); event.stopPropagation()">
                       <button onclick="openEditCdModal('${cd.id}')" class="w-7 h-7 rounded-lg bg-black/45 hover:bg-black/70 text-white flex items-center justify-center">✎</button>
                       <button onclick="deleteCd('${cd.id}')" class="w-7 h-7 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white flex items-center justify-center">✕</button>
                     </div>
@@ -1236,7 +1246,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         `;
       }).join("");
