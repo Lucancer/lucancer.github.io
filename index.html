@@ -81,11 +81,33 @@
       to { transform: rotate(360deg); }
     }
 
+    /* GRILLA DE DISCOS
+       Cada columna mide lo que ocupa la caja (280px) + lo que sobresale el disco
+       al pasar el mouse, así nunca pisa al de al lado ni se sale de la pantalla.
+       Entran hasta 4 por fila; en pantallas más chicas, 3, 2 o 1. */
+    :root {
+      --disc-slide: 115px;                                  /* cuánto sale el disco */
+      --cd-cell: calc(258px + var(--disc-slide));           /* 38 + 220 del disco + lo que sale */
+      --cd-gap: 24px;
+    }
+
+    #cdGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, var(--cd-cell));
+      justify-content: center;
+      column-gap: var(--cd-gap);
+      row-gap: 40px;
+    }
+
+    .cd-shelf {
+      /* Máximo 4 columnas */
+      max-width: calc(4 * var(--cd-cell) + 3 * var(--cd-gap));
+    }
+
     .cd-item-wrapper {
       position: relative;
       width: 280px;
       height: 245px;
-      margin-right: 75px;
       transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -108,7 +130,7 @@
     }
 
     .cd-item-wrapper:hover .cd-disc-container {
-      transform: translateX(115px);
+      transform: translateX(var(--disc-slide));
     }
 
     .cd-disc {
@@ -272,13 +294,27 @@
       opacity: 1;
     }
 
+    /* TABLET: el disco sale un poco menos para que entren 2 por fila */
+    @media (max-width: 900px) {
+      :root { --disc-slide: 70px; }
+    }
+
+    /* CELULAR: el disco sale menos para que entre todo en la pantalla */
     @media (max-width: 640px) {
-      .search-expand.open { width: 185px; }
-      .cd-item-wrapper { margin-right: 45px; transform: scale(0.92); }
+      :root { --disc-slide: 55px; }
+      /* Mientras se busca, la barra de búsqueda usa el lugar de los otros botones */
+      .search-expand.open { width: calc(100vw - 170px); }
+      #topBar.search-open #topBarRow > :not(:first-child) { display: none; }
+    }
+
+    /* Celulares muy angostos (por ejemplo, 320px): achicamos un poco los discos */
+    @media (max-width: 350px) {
+      #cdGrid { grid-template-columns: 1fr; }
+      .cd-item-wrapper { scale: 0.88; transform-origin: left center; }
     }
   </style>
 </head>
-<body class="p-6 md:p-12">
+<body class="p-4 sm:p-6 lg:p-12">
 
   <!-- Notificación flotante -->
   <!-- Firma -->
@@ -327,9 +363,9 @@
   </div>
 
   <!-- BARRA SUPERIOR MINIMALISTA -->
-  <div class="fixed top-5 right-5 z-50 flex flex-col items-end gap-2">
-    
-    <div class="flex items-center gap-2">
+  <div id="topBar" class="fixed top-5 right-5 z-50 flex flex-col items-end gap-2">
+
+    <div id="topBarRow" class="flex items-center gap-2">
       <!-- Lupa -->
       <div class="glass-pill rounded-full flex items-center px-1.5 py-1.5 transition-all">
         <div id="searchExpandBox" class="search-expand flex items-center">
@@ -581,8 +617,8 @@
   </div>
 
   <!-- ESTANTERÍA DE CDs -->
-  <main class="max-w-7xl mx-auto pt-12 pb-20">
-    <div id="cdGrid" class="flex flex-wrap items-center justify-center sm:justify-start gap-y-10 gap-x-6"></div>
+  <main class="cd-shelf mx-auto pt-16 lg:pt-12 pb-20">
+    <div id="cdGrid"></div>
 
     <div id="emptyState" class="hidden text-center py-24">
       <p id="emptyStateText" class="text-base font-medium text-slate-500">No se encontraron discos con ese criterio.</p>
@@ -2256,6 +2292,7 @@
 
       lupaBtn.addEventListener("click", () => {
         const isOpen = searchExpandBox.classList.toggle("open");
+        document.getElementById("topBar").classList.toggle("search-open", isOpen);
         searchOptionsDropdown.classList.toggle("hidden", !isOpen);
         lockPopover.classList.add("hidden");
         brushPopover.classList.add("hidden");
