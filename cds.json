@@ -72,6 +72,39 @@
   ],
   "cds": [
     {
+      "id": "cd-1792242811899-cus12",
+      "title": "ANY RUN",
+      "category": "Virus",
+      "url": "https://app.any.run",
+      "img": "https://i.pinimg.com/736x/a0/3e/7b/a03e7b75a86af3675bde405440578d1a.jpg",
+      "desc": "Maquina Virtual",
+      "keywords": [
+        "Web",
+        "Detector",
+        "URL",
+        "Apps",
+        "Virus",
+        "Anti",
+        "Buscador",
+        "Virtual",
+        "Machine"
+      ],
+      "design": {
+        "c1": "#6b6b6b",
+        "c2": "#adadad",
+        "c3": "#4b4b4b",
+        "pattern": "pixel",
+        "scale": 41,
+        "opacity": 90,
+        "colorCount": 3,
+        "patternColor": "#659337",
+        "rotation": 45,
+        "randomness": 0,
+        "seed": 190753,
+        "textColor": "#fef08a"
+      }
+    },
+    {
       "id": "cd-1792241932189-y3ydg",
       "title": "DNS Tracker",
       "category": "RED",
