@@ -72,6 +72,34 @@
   ],
   "cds": [
     {
+      "id": "cd-1792236174290-qfdjj",
+      "title": "Bypass",
+      "category": "Links",
+      "url": "https://bypass.city",
+      "img": "",
+      "desc": "City",
+      "keywords": [
+        "Web",
+        "Links",
+        "Bypass",
+        "Skip"
+      ],
+      "design": {
+        "c1": "#0000ff",
+        "c2": "#ffff80",
+        "c3": "#ff0000",
+        "pattern": "triangles",
+        "scale": 75,
+        "opacity": 90,
+        "colorCount": 3,
+        "patternColor": "#000000",
+        "rotation": 90,
+        "randomness": 0,
+        "seed": 325250,
+        "textColor": "#ffffff"
+      }
+    },
+    {
       "id": "cd-1792236019296-km2iw",
       "title": "r/Piracy",
       "category": "Hilo",
