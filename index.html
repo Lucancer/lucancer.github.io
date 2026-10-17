@@ -216,7 +216,7 @@
 </head>
 <body class="p-6 md:p-12">
 
-  <!-- Notificación flotante de sincronización -->
+  <!-- Notificación flotante -->
   <div id="syncToast" class="fixed bottom-5 right-5 z-50 hidden glass-pill px-4 py-2.5 rounded-2xl text-xs font-medium text-slate-800 shadow-lg items-center gap-2">
     <span id="syncToastDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
     <span id="syncToastText">Sincronizado con GitHub</span>
@@ -226,7 +226,7 @@
   <div class="fixed top-5 right-5 z-50 flex flex-col items-end gap-2">
     
     <div class="flex items-center gap-2">
-      <!-- Lupa con despliegue lateral -->
+      <!-- Lupa -->
       <div class="glass-pill rounded-full flex items-center px-1.5 py-1.5 transition-all">
         <div id="searchExpandBox" class="search-expand flex items-center">
           <input
@@ -246,7 +246,7 @@
         </button>
       </div>
 
-      <!-- Botón Configuración GitHub API (Solo Modo Propietario) -->
+      <!-- Botón GitHub API -->
       <button
         id="githubConfigBtn"
         class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-indigo-600 hover:scale-105 transition relative"
@@ -258,7 +258,7 @@
         <span id="ghConnectedDot" class="hidden absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-indigo-500"></span>
       </button>
 
-      <!-- Botón Pincel de Fondos (Solo Modo Propietario) -->
+      <!-- Botón Pincel -->
       <button
         id="brushBtn"
         class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-amber-700 hover:scale-105 transition"
@@ -269,7 +269,7 @@
         </svg>
       </button>
 
-      <!-- Botón Añadir CD (Solo Modo Propietario) -->
+      <!-- Botón Añadir CD -->
       <button
         id="addCdBtn"
         class="hidden glass-pill w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:text-emerald-700 hover:scale-105 transition"
@@ -298,7 +298,7 @@
       </button>
     </div>
 
-    <!-- DESPLEGABLE INFERIOR DE BÚSQUEDA -->
+    <!-- DESPLEGABLE BÚSQUEDA -->
     <div id="searchOptionsDropdown" class="hidden glass-pill rounded-2xl p-3.5 w-72 md:w-80 transition-all">
       <div class="flex items-center justify-between mb-2">
         <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Categorías</span>
@@ -311,18 +311,18 @@
       </div>
     </div>
 
-    <!-- POPOVER DEL CANDADO -->
+    <!-- POPOVER CANDADO (CONTRASEÑA: 2308) -->
     <div id="lockPopover" class="hidden glass-pill rounded-2xl p-4 w-72 shadow-xl">
       <div id="lockLoginView">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-semibold text-slate-700">Modo Propietario</span>
-          <span class="text-[10px] mono text-slate-400">Protegido</span>
+          <span class="text-[10px] mono text-slate-400">Clave: 2308</span>
         </div>
         <form id="unlockForm" class="flex items-center gap-1.5">
           <input
             id="ownerPassInput"
             type="password"
-            placeholder="Código..."
+            placeholder="Código (2308)..."
             class="w-full px-3 py-1.5 text-xs rounded-xl bg-white/80 border border-slate-200 focus:outline-none text-slate-800"
             autocomplete="off"
           />
@@ -346,20 +346,20 @@
       </div>
     </div>
 
-    <!-- POPOVER CONFIGURACIÓN DE GITHUB API (Auto-Guardado en la nube) -->
+    <!-- POPOVER GITHUB API -->
     <div id="githubPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl space-y-2.5">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold text-slate-800">Auto-Guardado en GitHub</span>
         <span id="ghBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Sin vincular</span>
       </div>
       <p class="text-[11px] text-slate-500 leading-relaxed">
-        Ingresá tus datos una sola vez. Cada cambio que hagas se guardará directo en el archivo <code class="mono">cds.json</code> de tu GitHub.
+        Ingresá tus datos una sola vez. Cada cambio se guardará directo en <code class="mono">cds.json</code>.
       </p>
       <div class="space-y-2">
-        <input id="ghOwnerInput" type="text" placeholder="Tu usuario de GitHub (ej: lucapinero)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200" />
-        <input id="ghRepoInput" type="text" placeholder="Nombre del Repo (ej: mis-marcadores)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200" />
-        <input id="ghBranchInput" type="text" value="main" placeholder="Rama (main o master)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200 mono" />
-        <input id="ghTokenInput" type="password" placeholder="Token de GitHub (ghp_... o github_pat_...)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200 mono" />
+        <input id="ghOwnerInput" type="text" placeholder="Tu usuario de GitHub" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200" />
+        <input id="ghRepoInput" type="text" placeholder="Nombre del Repo" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200" />
+        <input id="ghBranchInput" type="text" value="main" placeholder="Rama (main)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200 mono" />
+        <input id="ghTokenInput" type="password" placeholder="Token de GitHub (ghp_...)" class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-slate-200 mono" />
       </div>
       <div class="flex gap-2 pt-1">
         <button id="saveGhConfigBtn" class="flex-1 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
@@ -368,7 +368,7 @@
       </div>
     </div>
 
-    <!-- POPOVER DEL PINCEL -->
+    <!-- POPOVER PINCEL -->
     <div id="brushPopover" class="hidden glass-pill rounded-2xl p-4 w-80 shadow-xl">
       <div class="flex items-center justify-between mb-3">
         <span class="text-xs font-semibold text-slate-700">Fondo de la Estantería</span>
@@ -453,7 +453,7 @@
             <input id="cdUrlInput" type="url" required placeholder="https://..." class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 mono" />
           </div>
 
-          <!-- IMAGEN DEL CD: DESDE PC (CON AUTO-COMPRESIÓN) O LINK -->
+          <!-- IMAGEN DEL CD: DESDE PC O LINK -->
           <div class="p-3 rounded-2xl bg-slate-100/80 border border-slate-200/80 space-y-2">
             <div class="flex items-center justify-between">
               <label class="text-xs font-semibold text-slate-700">Imagen del Disco Giratorio</label>
@@ -575,40 +575,13 @@
 
   <script>
     /*************************************************************************
-     * 1. SEGURIDAD OFUSCADA VERIFICADA CARÁCTER POR CARÁCTER + ANTI-SPAM
+     * CONTRASEÑA DIRECTA: 2308
      *************************************************************************/
-    // Arreglo matemático ofuscado (XOR) para validar el código de propietario
-    // sin que la clave figure en texto plano al inspeccionar elementos.
-    const K_LOCK = [112, 87, 101, 134, 72, 134, 74, 109, 101, 86, 75, 71, 93, 94, 83, 112];
-    const RATE_LIMIT_KEY = "cd_vault_rate_limit_v4";
+    const OWNER_PASSWORD = "2308";
     let isOwnerMode = false;
 
-    function verifyOwnerKey(rawInput) {
-      const s = (rawInput || "").trim();
-      if (s.length !== K_LOCK.length) return false;
-      let diff = 0;
-      for (let i = 0; i < K_LOCK.length; i++) {
-        const expected = K_LOCK[i];
-        const actual = (s.charCodeAt(i) ^ (i * 7 + 13)) + 50;
-        diff |= (expected ^ actual);
-      }
-      return diff === 0;
-    }
-
-    function getRateLimitState() {
-      try {
-        return JSON.parse(localStorage.getItem(RATE_LIMIT_KEY)) || { attempts: 0, lockUntil: 0 };
-      } catch {
-        return { attempts: 0, lockUntil: 0 };
-      }
-    }
-
-    function saveRateLimitState(state) {
-      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(state));
-    }
-
     /*************************************************************************
-     * 2. COMPRESOR INTELIGENTE PARA FOTOS SUBIDAS DESDE LA PC
+     * COMPRESOR DE IMAGENES DE LA PC
      *************************************************************************/
     function compressLocalImage(file) {
       return new Promise((resolve, reject) => {
@@ -644,7 +617,7 @@
     }
 
     /*************************************************************************
-     * 3. SINCRONIZACIÓN CON GITHUB API (LECTURA PÚBLICA + GUARDADO PROPIETARIO)
+     * SINCRONIZACIÓN GITHUB API
      *************************************************************************/
     const GH_CONFIG_KEY = "cd_vault_gh_config_v1";
     const STORAGE_CDS_KEY = "cd_bookmarks_collection_v3";
@@ -690,7 +663,7 @@
           return;
         }
       } catch (e) {
-        console.warn("Usando respaldo local mientras se sube cds.json:", e);
+        console.warn("Usando respaldo local:", e);
       }
 
       const savedCds = localStorage.getItem(STORAGE_CDS_KEY);
@@ -708,7 +681,7 @@
 
       const cfg = getGhConfig();
       if (!cfg || !cfg.owner || !cfg.repo || !cfg.token) {
-        showToast("Guardado en esta PC (Vinculá GitHub en el ícono para sincronizar en la nube)");
+        showToast("Guardado en esta PC (Vinculá GitHub en el ícono)");
         return;
       }
 
@@ -756,19 +729,16 @@
           body: JSON.stringify(putBody)
         });
 
-        if (!putRes.ok) {
-          throw new Error(`Error ${putRes.status}`);
-        }
-
-        showToast("¡Guardado en GitHub! En segundos se actualiza en todas las PCs.");
+        if (!putRes.ok) throw new Error(`Error ${putRes.status}`);
+        showToast("¡Guardado en GitHub correctamente!");
       } catch (err) {
         console.error(err);
-        showToast("Error al subir a GitHub. Revisá tu Token o nombre de Repo.", true);
+        showToast("Error al subir a GitHub. Revisá tu Token.", true);
       }
     }
 
     /*************************************************************************
-     * 4. FONDOS Y PATRONES DE LAS CAJAS
+     * FONDOS Y PATRONES
      *************************************************************************/
     const BG_PRESETS = [
       { id: "warm-cream", name: "Blanco Crema Suave", css: "linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%)" },
@@ -836,7 +806,7 @@
     }
 
     /*************************************************************************
-     * 5. RENDERIZADO E INTERACCIÓN
+     * RENDERIZADO
      *************************************************************************/
     let activeCategory = "Todas";
     let searchQuery = "";
@@ -1175,38 +1145,20 @@
         syncToGitHub();
       });
 
-      document.getElementById("unlockForm").addEventListener("submit", async e => {
+      document.getElementById("unlockForm").addEventListener("submit", e => {
         e.preventDefault();
         const statusMsg = document.getElementById("lockStatusMsg");
-        const inputEl = document.getElementById("ownerPassInput");
-        const now = Date.now();
-        const rl = getRateLimitState();
+        const inputVal = document.getElementById("ownerPassInput").value.trim();
 
-        if (rl.lockUntil > now) {
-          statusMsg.textContent = `Bloqueado. Esperá ${Math.ceil((rl.lockUntil - now) / 1000)}s.`;
-          statusMsg.classList.remove("hidden");
-          return;
-        }
-
-        await new Promise(r => setTimeout(r, 250));
-
-        if (verifyOwnerKey(inputEl.value)) {
-          saveRateLimitState({ attempts: 0, lockUntil: 0 });
+        if (inputVal === OWNER_PASSWORD) {
           isOwnerMode = true;
-          inputEl.value = "";
+          document.getElementById("ownerPassInput").value = "";
           statusMsg.classList.add("hidden");
           updateOwnerUI();
           lockPopover.classList.add("hidden");
           showToast("Modo Propietario activado");
         } else {
-          rl.attempts += 1;
-          if (rl.attempts >= 3) {
-            rl.lockUntil = Date.now() + 30000 * Math.pow(2, rl.attempts - 3);
-            statusMsg.textContent = `Demasiados intentos. Bloqueado por 30s.`;
-          } else {
-            statusMsg.textContent = `Código incorrecto (${3 - rl.attempts} intentos restantes).`;
-          }
-          saveRateLimitState(rl);
+          statusMsg.textContent = "Código incorrecto (es 2308)";
           statusMsg.classList.remove("hidden");
         }
       });
@@ -1245,7 +1197,7 @@
         try {
           const compressedDataUrl = await compressLocalImage(file);
           document.getElementById("cdImgInput").value = compressedDataUrl;
-          badge.textContent = "✓ Imagen de PC lista para guardar en la nube";
+          badge.textContent = "✓ Imagen de PC lista";
           updateLiveBoxPreview();
         } catch {
           badge.textContent = "Error al procesar la imagen";
