@@ -82,11 +82,9 @@
         "Web",
         "Tracker",
         "Red",
-        "Locacion",
         "Location",
         "DNS",
-        "Buscador",
-        "Buscar"
+        "Buscador"
       ],
       "design": {
         "c1": "#4e8c4a",
