@@ -1,5 +1,5 @@
 {
-  "bg": "radial-gradient(#D6CBB8 1.2px, transparent 1.8px) 0 0 / 22px 22px, linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 100%)",
+  "bg": "repeating-conic-gradient(from 0deg at 50% 0%, #FEF3C7 0deg 6deg, #FDE68A 6deg 12deg)",
   "cds": [
     {
       "id": "cd-1792221942853",
