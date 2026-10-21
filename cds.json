@@ -381,7 +381,7 @@
         "randomness": 54,
         "seed": 372725,
         "textColor": "#fef08a",
-        "textFont": "pixel",
+        "textFont": "inter",
         "textEffect": "neon",
         "textSize": "md",
         "textUpper": true
