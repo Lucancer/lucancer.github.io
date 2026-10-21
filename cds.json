@@ -164,7 +164,11 @@
         "rotation": 0,
         "randomness": 0,
         "seed": 112896,
-        "textColor": "#0f172a"
+        "textColor": "#0f172a",
+        "textFont": "typewriter",
+        "textEffect": "none",
+        "textSize": "lg",
+        "textUpper": false
       }
     },
     {
