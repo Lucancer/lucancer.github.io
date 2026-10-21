@@ -131,7 +131,11 @@
         "rotation": 0,
         "randomness": 0,
         "seed": 91747,
-        "textColor": "#ffffff"
+        "textColor": "#ffffff",
+        "textFont": "mono",
+        "textEffect": "none",
+        "textSize": "md",
+        "textUpper": false
       }
     },
     {
