@@ -100,9 +100,9 @@
         "randomness": 0,
         "seed": 423570,
         "textColor": "#fef08a",
-        "textFont": "inter",
-        "textEffect": "neon",
-        "textSize": "md",
+        "textFont": "poster",
+        "textEffect": "retro3d",
+        "textSize": "lg",
         "textUpper": false
       }
     },
