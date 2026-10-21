@@ -437,7 +437,11 @@
         "rotation": 90,
         "randomness": 0,
         "seed": 325250,
-        "textColor": "#ffffff"
+        "textColor": "#ffffff",
+        "textFont": "cartel",
+        "textEffect": "none",
+        "textSize": "md",
+        "textUpper": false
       }
     },
     {
