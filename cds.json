@@ -453,7 +453,11 @@
         "rotation": 20,
         "randomness": 0,
         "seed": 956458,
-        "textColor": "#fef08a"
+        "textColor": "#4ade80",
+        "textFont": "mono",
+        "textEffect": "none",
+        "textSize": "md",
+        "textUpper": false
       }
     }
   ]
