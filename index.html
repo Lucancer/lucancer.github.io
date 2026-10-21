@@ -2238,22 +2238,25 @@
       };
     }
 
-    // CSS del efecto (solo text-shadow, así funciona con cualquier fuente y color)
+    // CSS del efecto. Usa filter: drop-shadow (y no text-shadow) porque el título y la
+    // descripción tienen límite de 2 líneas (line-clamp), que recorta todo lo que sale de
+    // su caja: con text-shadow el brillo se veía cortado en un rectángulo. El filtro se
+    // dibuja por fuera de ese recorte. Cada drop-shadow se suma al anterior.
     function textEffectCss(effect, color) {
       const edge = isDarkColor(color) ? "#ffffff" : "#000000";
       switch (effect) {
         case "neon":
-          return `text-shadow: 0 0 2px #ffffffaa, 0 0 6px ${color}, 0 0 12px ${color}, 0 0 22px ${color}, 0 0 36px ${color}99;`;
+          return `filter: drop-shadow(0 0 1px ${color}) drop-shadow(0 0 4px ${color}) drop-shadow(0 0 9px ${color}cc);`;
         case "shadow":
-          return `text-shadow: 0 2px 4px rgba(0,0,0,0.6), 0 1px 1px rgba(0,0,0,0.4);`;
+          return `filter: drop-shadow(0 2px 3px rgba(0,0,0,0.65));`;
         case "outline":
-          return `text-shadow: -1px -1px 0 ${edge}, 1px -1px 0 ${edge}, -1px 1px 0 ${edge}, 1px 1px 0 ${edge}, 0 -1px 0 ${edge}, 0 1px 0 ${edge}, -1px 0 0 ${edge}, 1px 0 0 ${edge};`;
+          return `filter: drop-shadow(1px 0 0 ${edge}) drop-shadow(-1px 0 0 ${edge}) drop-shadow(0 1px 0 ${edge}) drop-shadow(0 -1px 0 ${edge});`;
         case "retro3d":
-          return `text-shadow: 1px 1px 0 ${edge}aa, 2px 2px 0 ${edge}88, 3px 3px 0 ${edge}66, 4px 4px 0 ${edge}44;`;
+          return `filter: drop-shadow(1px 1px 0 ${edge}88) drop-shadow(1px 1px 0 ${edge}66) drop-shadow(1px 1px 0 ${edge}44);`;
         case "glitch":
-          return `text-shadow: -2px 0 #ff00c8, 2px 0 #00e5ff;`;
+          return `filter: drop-shadow(-2px 0 0 #ff00c8) drop-shadow(2px 0 0 #00e5ff);`;
         case "fire":
-          return `text-shadow: 0 0 3px #fff7, 0 -2px 4px #ffd000, 0 -4px 8px #ff8a00, 0 -7px 14px #ff3d00, 0 -10px 20px #c41e00;`;
+          return `filter: drop-shadow(0 -1px 2px #ffd000) drop-shadow(0 -2px 4px #ff8a00) drop-shadow(0 -3px 6px #ff3d00cc);`;
         default:
           return "";
       }
