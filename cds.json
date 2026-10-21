@@ -325,7 +325,11 @@
         "rotation": 110,
         "randomness": 75,
         "seed": 919623,
-        "textColor": "#0f172a"
+        "textColor": "#0f172a",
+        "textFont": "pixel",
+        "textEffect": "none",
+        "textSize": "md",
+        "textUpper": false
       }
     },
     {
