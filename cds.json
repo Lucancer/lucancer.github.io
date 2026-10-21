@@ -306,7 +306,7 @@
         "textFont": "poster",
         "textEffect": "neon",
         "textSize": "md",
-        "textUpper": false
+        "textUpper": true
       }
     },
     {
