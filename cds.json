@@ -99,7 +99,11 @@
         "rotation": 0,
         "randomness": 0,
         "seed": 423570,
-        "textColor": "#fef08a"
+        "textColor": "#fef08a",
+        "textFont": "inter",
+        "textEffect": "neon",
+        "textSize": "md",
+        "textUpper": false
       }
     },
     {
