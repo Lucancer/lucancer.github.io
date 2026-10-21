@@ -456,7 +456,7 @@
         "textColor": "#4ade80",
         "textFont": "terminal",
         "textEffect": "none",
-        "textSize": "md",
+        "textSize": "sm",
         "textUpper": false
       }
     }
