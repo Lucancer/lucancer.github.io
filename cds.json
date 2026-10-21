@@ -380,7 +380,11 @@
         "rotation": 0,
         "randomness": 0,
         "seed": 282617,
-        "textColor": "#ffffff"
+        "textColor": "#ffffff",
+        "textFont": "marker",
+        "textEffect": "none",
+        "textSize": "lg",
+        "textUpper": false
       }
     },
     {
