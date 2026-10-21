@@ -455,8 +455,8 @@
         "seed": 956458,
         "textColor": "#4ade80",
         "textFont": "terminal",
-        "textEffect": "none",
-        "textSize": "sm",
+        "textEffect": "retro3d",
+        "textSize": "md",
         "textUpper": false
       }
     }
