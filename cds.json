@@ -276,7 +276,11 @@
         "rotation": 0,
         "randomness": 0,
         "seed": 668501,
-        "textColor": "#ffffff"
+        "textColor": "#ffffff",
+        "textFont": "elegant",
+        "textEffect": "none",
+        "textSize": "lg",
+        "textUpper": false
       }
     },
     {
