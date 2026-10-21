@@ -28,7 +28,7 @@
   <!-- Ícono de la pestaña: un disco -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%BF%3C/text%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Special+Elite&family=Orbitron:wght@700&family=Press+Start+2P&family=VT323&family=Bebas+Neue&family=Permanent+Marker&family=Pacifico&family=Playfair+Display:wght@700&family=Bungee&family=Creepster&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #FDFBF7 0%, #F5EFE6 50%, #EFECE6 100%);
@@ -757,12 +757,9 @@
               <input id="keywordDraftInput" type="text" placeholder="Ej: Web, Juego, Red, Chat..." class="w-full px-2.5 py-1.5 text-xs rounded-xl bg-white border border-amber-200" />
               <button type="button" id="addKeywordBtn" class="px-3 py-1.5 rounded-xl bg-amber-800 text-white text-xs font-medium hover:bg-amber-700 shrink-0">+ Tag</button>
             </div>
-            <div class="flex flex-wrap gap-1 mb-2">
-              <button type="button" data-quicktag="Web" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Web</button>
-              <button type="button" data-quicktag="Juego" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Juego</button>
-              <button type="button" data-quicktag="Red" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Red</button>
-              <button type="button" data-quicktag="Chat" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md bg-white border border-amber-200 text-amber-900 hover:bg-amber-100">+ Chat</button>
-            </div>
+            <!-- Pool de tags: los de siempre + todos los que ya usaste en tus discos (se arma solo) -->
+            <span class="text-[10px] text-amber-800/70 block mb-1">Tags que ya usaste · tocá para agregar o quitar</span>
+            <div id="quickTagPool" class="flex flex-wrap gap-1 mb-2 max-h-24 overflow-y-auto"></div>
             <div id="activeKeywordsContainer" class="flex flex-wrap gap-1.5"></div>
           </div>
         </div>
@@ -928,12 +925,38 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-xs font-semibold text-slate-700">Texto</span>
-              <div class="flex gap-1.5">
-                <button type="button" data-textcolor="#ffffff" class="text-color-btn px-2.5 py-1 rounded-lg text-[11px] bg-slate-800 text-white font-medium">Claro</button>
-                <button type="button" data-textcolor="#0f172a" class="text-color-btn px-2.5 py-1 rounded-lg text-[11px] bg-white text-slate-900 font-medium border border-slate-300">Oscuro</button>
-                <button type="button" data-textcolor="#fef08a" class="text-color-btn px-2.5 py-1 rounded-lg text-[11px] bg-slate-900 text-yellow-200 font-medium">Neón</button>
+            <!-- TEXTO DE LA TAPA: color, fuente, estilo, tamaño y mayúsculas -->
+            <div class="pt-2 border-t border-slate-200 space-y-2.5">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-600 block">Texto de la tapa</span>
+
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-semibold text-slate-600">Color</span>
+                <div class="flex items-center gap-1.5">
+                  <div id="textColorSwatches" class="flex gap-1"></div>
+                  <input type="color" id="textColorInput" value="#ffffff" class="w-8 h-7 cursor-pointer bg-transparent border-0" title="Elegir cualquier color" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Fuente</label>
+                <select id="textFontSelect" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200"></select>
+              </div>
+
+              <div>
+                <span class="block text-[11px] font-semibold text-slate-600 mb-1">Estilo</span>
+                <div id="textEffectChips" class="flex flex-wrap gap-1"></div>
+              </div>
+
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-semibold" role="group" aria-label="Tamaño del texto">
+                  <button type="button" data-textsize="sm" class="text-size-btn px-2.5 py-0.5 rounded-md transition">Chico</button>
+                  <button type="button" data-textsize="md" class="text-size-btn px-2.5 py-0.5 rounded-md transition">Normal</button>
+                  <button type="button" data-textsize="lg" class="text-size-btn px-2.5 py-0.5 rounded-md transition">Grande</button>
+                </div>
+                <label class="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 cursor-pointer">
+                  <input type="checkbox" id="textUpperToggle" class="accent-slate-800 cursor-pointer" />
+                  MAYÚSCULAS
+                </label>
               </div>
             </div>
 
@@ -942,7 +965,7 @@
               <div id="liveBoxPreview" class="w-full h-36 rounded-xl border border-slate-300 shadow-inner relative overflow-hidden flex items-end p-3">
                 <div id="livePreviewText" class="relative z-10">
                   <p class="text-[10px] mono uppercase opacity-80">TRK #01 • PREVIEW</p>
-                  <p class="text-sm font-bold leading-tight">Título de Ejemplo</p>
+                  <p id="livePreviewTitle" class="text-sm font-bold leading-tight">Título de Ejemplo</p>
                 </div>
               </div>
             </div>
@@ -2154,6 +2177,95 @@
     let searchQuery = "";
     let modalKeywords = [];
     let currentModalTextColor = "#ffffff";
+    let currentModalTextFont = "inter";
+    let currentModalTextEffect = "none";
+    let currentModalTextSize = "md";
+    let currentModalTextUpper = false;
+
+    /*************************************************************************
+     * TEXTO DE LA TAPA: fuentes, estilos (efectos) y tamaños
+     * "scale" compensa las fuentes que se ven más grandes o más chicas que las demás.
+     *************************************************************************/
+    const TEXT_FONTS = {
+      inter:      { name: "Normal (Inter)",          css: "'Inter', sans-serif",                 scale: 1 },
+      mono:       { name: "Código",                  css: "'JetBrains Mono', monospace",         scale: 0.95 },
+      typewriter: { name: "Máquina de escribir",     css: "'Special Elite', monospace",          scale: 1 },
+      orbitron:   { name: "Futurista",               css: "'Orbitron', sans-serif",              scale: 0.9 },
+      pixel:      { name: "Píxel 8 bits",            css: "'Press Start 2P', monospace",         scale: 0.62 },
+      terminal:   { name: "Terminal retro",          css: "'VT323', monospace",                  scale: 1.35 },
+      poster:     { name: "Póster (Bebas)",          css: "'Bebas Neue', sans-serif",            scale: 1.35 },
+      cartel:     { name: "Cartel (Bungee)",         css: "'Bungee', sans-serif",                scale: 0.85 },
+      marker:     { name: "Marcador",                css: "'Permanent Marker', cursive",         scale: 1 },
+      script:     { name: "Manuscrita (Pacifico)",   css: "'Pacifico', cursive",                 scale: 0.95 },
+      elegant:    { name: "Elegante (Playfair)",     css: "'Playfair Display', serif",           scale: 1.05 },
+      horror:     { name: "Terror (Creepster)",      css: "'Creepster', cursive",                scale: 1.2 }
+    };
+
+    const TEXT_EFFECTS = {
+      none:    "Ninguno",
+      neon:    "Neón",
+      shadow:  "Sombra",
+      outline: "Contorno",
+      retro3d: "Retro 3D",
+      glitch:  "Glitch",
+      fire:    "Fuego"
+    };
+
+    const TEXT_SIZES = { sm: 13, md: 16, lg: 20 };   // px del título en la caja
+
+    const TEXT_COLOR_PRESETS = ["#ffffff", "#0f172a", "#fef08a", "#67e8f9", "#f472b6", "#4ade80"];
+
+    // ¿El color es oscuro? (para elegir si el contorno va blanco o negro)
+    function isDarkColor(hex) {
+      const n = parseInt((hex || "#ffffff").slice(1), 16);
+      const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
+    }
+
+    // Lee el estilo de texto de un disco con valores por defecto (sirve para discos viejos también).
+    // Los discos viejos que tenían el botón "Neón" (#fef08a) pasan a tener el estilo Neón.
+    function getTextStyle(design) {
+      const d = design || {};
+      const color = /^#[0-9a-f]{6}$/i.test(d.textColor || "") ? d.textColor : "#ffffff";
+      const effect = TEXT_EFFECTS[d.textEffect] ? d.textEffect
+        : (d.textEffect === undefined && color.toLowerCase() === "#fef08a" ? "neon" : "none");
+      return {
+        color,
+        font: TEXT_FONTS[d.textFont] ? d.textFont : "inter",
+        effect,
+        size: TEXT_SIZES[d.textSize] ? d.textSize : "md",
+        upper: d.textUpper === true
+      };
+    }
+
+    // CSS del efecto (solo text-shadow, así funciona con cualquier fuente y color)
+    function textEffectCss(effect, color) {
+      const edge = isDarkColor(color) ? "#ffffff" : "#000000";
+      switch (effect) {
+        case "neon":
+          return `text-shadow: 0 0 2px #ffffffaa, 0 0 6px ${color}, 0 0 12px ${color}, 0 0 22px ${color}, 0 0 36px ${color}99;`;
+        case "shadow":
+          return `text-shadow: 0 2px 4px rgba(0,0,0,0.6), 0 1px 1px rgba(0,0,0,0.4);`;
+        case "outline":
+          return `text-shadow: -1px -1px 0 ${edge}, 1px -1px 0 ${edge}, -1px 1px 0 ${edge}, 1px 1px 0 ${edge}, 0 -1px 0 ${edge}, 0 1px 0 ${edge}, -1px 0 0 ${edge}, 1px 0 0 ${edge};`;
+        case "retro3d":
+          return `text-shadow: 1px 1px 0 ${edge}aa, 2px 2px 0 ${edge}88, 3px 3px 0 ${edge}66, 4px 4px 0 ${edge}44;`;
+        case "glitch":
+          return `text-shadow: -2px 0 #ff00c8, 2px 0 #00e5ff;`;
+        case "fire":
+          return `text-shadow: 0 0 3px #fff7, 0 -2px 4px #ffd000, 0 -4px 8px #ff8a00, 0 -7px 14px #ff3d00, 0 -10px 20px #c41e00;`;
+        default:
+          return "";
+      }
+    }
+
+    // Estilo completo para el título de la caja
+    function titleTextCss(design) {
+      const t = getTextStyle(design);
+      const f = TEXT_FONTS[t.font];
+      const px = Math.round(TEXT_SIZES[t.size] * f.scale);
+      return `font-family: ${f.css}; font-size: ${px}px; line-height: 1.3; ${t.upper ? "text-transform: uppercase; letter-spacing: 0.04em;" : ""} ${textEffectCss(t.effect, t.color)}`;
+    }
 
     function normalizeStr(str) {
       return (str || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -2221,7 +2333,10 @@
       grid.innerHTML = filtered.map((cd, idx) => {
         const trackNum = String(idx + 1).padStart(2, "0");
         const boxStyle = generateBoxStyle(cd.design);
-        const textColor = cd.design?.textColor || "#ffffff";
+        const textStyle = getTextStyle(cd.design);
+        const textColor = textStyle.color;
+        // El estilo (neón, sombra…) también se aplica suave a la descripción
+        const descEffect = textStyle.effect === "none" ? "" : textEffectCss(textStyle.effect, textColor);
         // Disco sin imagen: se pinta con los colores de la tapa (respetando si usa 1, 2 o 3)
         const count = Number(cd.design?.colorCount) || 3;
         const dc1 = cd.design?.c1 || "#334155";
@@ -2253,8 +2368,8 @@
                   ` : `<span class="text-[10px] mono opacity-75">STEREO DISC</span>`}
                 </div>
                 <div class="my-auto pt-2">
-                  <h3 class="font-bold text-base leading-snug line-clamp-2">${escapeHtml(cd.title)}</h3>
-                  <p class="text-[11px] opacity-85 mt-1 line-clamp-2">${escapeHtml(cd.desc || cd.url)}</p>
+                  <h3 class="font-bold line-clamp-2" style="${titleTextCss(cd.design)}">${escapeHtml(cd.title)}</h3>
+                  <p class="text-[11px] opacity-85 mt-1 line-clamp-2" style="${descEffect}">${escapeHtml(cd.desc || cd.url)}</p>
                 </div>
                 <div class="pt-2 border-t border-current/20 flex items-end justify-between gap-2">
                   <div class="truncate">
@@ -2918,20 +3033,113 @@
 
       const previewEl = document.getElementById("liveBoxPreview");
       previewEl.setAttribute("style", `${generateBoxStyle({ c1, c2, c3, colorCount: currentColorCount, patternColor: getModalPatternColor(), pattern, scale, opacity, rotation, randomness, seed: currentModalSeed })} color: ${currentModalTextColor};`);
-      document.querySelector("#livePreviewText p:last-child").textContent = title;
+      const previewTitle = document.getElementById("livePreviewTitle");
+      previewTitle.textContent = title;
+      previewTitle.setAttribute("style", titleTextCss(getModalTextDesign()));
+      syncTextControls();
 
       const imgVal = document.getElementById("cdImgInput").value.trim();
       const miniDisc = document.getElementById("discMiniPreview");
       miniDisc.style.backgroundImage = imgVal ? `url('${imgVal.replace(/'/g, "\\'")}')` : "none";
     }
 
+    // Los datos de texto que se guardan en el disco
+    function getModalTextDesign() {
+      return {
+        textColor: currentModalTextColor,
+        textFont: currentModalTextFont,
+        textEffect: currentModalTextEffect,
+        textSize: currentModalTextSize,
+        textUpper: currentModalTextUpper
+      };
+    }
+
+    function setModalTextDesign(design) {
+      const t = getTextStyle(design);
+      currentModalTextColor = t.color;
+      currentModalTextFont = t.font;
+      currentModalTextEffect = t.effect;
+      currentModalTextSize = t.size;
+      currentModalTextUpper = t.upper;
+    }
+
+    // Dibuja los controles de "Texto de la tapa" una sola vez
+    function buildTextControls() {
+      document.getElementById("textFontSelect").innerHTML = Object.entries(TEXT_FONTS)
+        .map(([id, f]) => `<option value="${id}">${f.name}</option>`).join("");
+      document.getElementById("textEffectChips").innerHTML = Object.entries(TEXT_EFFECTS)
+        .map(([id, name]) => `<button type="button" data-texteffect="${id}" class="text-effect-btn px-2.5 py-1 rounded-lg text-[11px] font-medium border transition">${name}</button>`).join("");
+      document.getElementById("textColorSwatches").innerHTML = TEXT_COLOR_PRESETS
+        .map(c => `<button type="button" data-textcolor="${c}" title="${c}" class="text-color-swatch w-6 h-6 rounded-full border-2 transition" style="background:${c}"></button>`).join("");
+    }
+
+    // Marca en los controles lo que está elegido ahora
+    function syncTextControls() {
+      document.getElementById("textColorInput").value = currentModalTextColor;
+      document.getElementById("textFontSelect").value = currentModalTextFont;
+      document.getElementById("textUpperToggle").checked = currentModalTextUpper;
+      document.querySelectorAll(".text-color-swatch").forEach(b => {
+        const on = b.dataset.textcolor.toLowerCase() === currentModalTextColor.toLowerCase();
+        b.style.borderColor = on ? "#0f172a" : "#cbd5e1";
+        b.style.transform = on ? "scale(1.12)" : "";
+      });
+      document.querySelectorAll(".text-effect-btn").forEach(b => {
+        const on = b.dataset.texteffect === currentModalTextEffect;
+        b.className = `text-effect-btn px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${on ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"}`;
+      });
+      document.querySelectorAll(".text-size-btn").forEach(b => {
+        const on = b.dataset.textsize === currentModalTextSize;
+        b.classList.toggle("bg-white", on);
+        b.classList.toggle("shadow", on);
+        b.classList.toggle("text-slate-900", on);
+        b.classList.toggle("text-slate-500", !on);
+      });
+    }
+
     function renderModalKeywords() {
       const container = document.getElementById("activeKeywordsContainer");
+      renderQuickTagPool();
       if (modalKeywords.length === 0) {
         container.innerHTML = `<span class="text-[11px] text-amber-800/60 italic">Sin palabras ocultas</span>`;
         return;
       }
       container.innerHTML = modalKeywords.map((k, i) => `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] bg-amber-900 text-amber-50 font-medium">#${escapeHtml(k)} <button type="button" onclick="removeModalKeyword(${i})" class="hover:text-rose-300">✕</button></span>`).join("");
+    }
+
+    // POOL DE TAGS: los básicos + todos los tags de los discos de esta estantería
+    // + los que acabás de escribir en esta ventana. Sin repetidos y de la A a la Z.
+    const BASE_QUICK_TAGS = ["Web", "Juego", "Red", "Chat"];
+
+    function getTagPool() {
+      const pool = new Map();
+      const add = t => {
+        const clean = typeof t === "string" ? t.trim() : "";
+        if (clean && !pool.has(normalizeStr(clean))) pool.set(normalizeStr(clean), clean);
+      };
+      BASE_QUICK_TAGS.forEach(add);
+      cds.forEach(cd => (Array.isArray(cd.keywords) ? cd.keywords : []).forEach(add));
+      modalKeywords.forEach(add);
+      return [...pool.values()].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base", numeric: true }));
+    }
+
+    function renderQuickTagPool() {
+      const box = document.getElementById("quickTagPool");
+      if (!box) return;
+      const active = new Set(modalKeywords.map(normalizeStr));
+      box.innerHTML = getTagPool().map(tag => {
+        const on = active.has(normalizeStr(tag));
+        const cls = on
+          ? "bg-amber-800 border-amber-800 text-white hover:bg-amber-700"
+          : "bg-white border-amber-200 text-amber-900 hover:bg-amber-100";
+        return `<button type="button" data-pooltag="${escapeHtml(tag)}" class="quick-tag-btn text-[10px] px-2 py-0.5 rounded-md border ${cls}">${on ? "✓" : "+"} ${escapeHtml(tag)}</button>`;
+      }).join("");
+    }
+
+    function toggleModalKeyword(tag) {
+      const idx = modalKeywords.findIndex(k => normalizeStr(k) === normalizeStr(tag));
+      if (idx >= 0) modalKeywords.splice(idx, 1);
+      else modalKeywords.push(tag);
+      renderModalKeywords();
     }
 
     function addModalKeywordFromStr(rawStr) {
@@ -2992,7 +3200,7 @@
       document.getElementById("boxPatternRotation").value = item.design?.rotation ?? 0;
       document.getElementById("boxPatternRandom").value = item.design?.randomness ?? 0;
       currentModalSeed = item.design?.seed || newPatternSeed();
-      currentModalTextColor = item.design?.textColor || "#ffffff";
+      setModalTextDesign(item.design);
       updateLiveBoxPreview();
       document.getElementById("cdModal").classList.replace("hidden", "flex");
       document.body.classList.add("modal-open");
@@ -3117,7 +3325,10 @@
           rotation: clampNum(d.rotation, 0, 360, 0),
           randomness: clampNum(d.randomness, 0, 100, 0),
           seed: Math.round(clampNum(d.seed, 1, 999999, 1)),
-          textColor: HEX_COLOR.test(d.textColor) ? d.textColor : "#ffffff"
+          ...(() => {
+            const t = getTextStyle(d);
+            return { textColor: t.color, textFont: t.font, textEffect: t.effect, textSize: t.size, textUpper: t.upper };
+          })()
         }
       };
     }
@@ -3486,8 +3697,10 @@
         }
       });
 
-      document.querySelectorAll(".quick-tag-btn").forEach(btn => {
-        btn.addEventListener("click", () => addModalKeywordFromStr(btn.dataset.quicktag));
+      // Pool de tags: un solo listener para todos los botones (se vuelven a dibujar seguido)
+      document.getElementById("quickTagPool").addEventListener("click", e => {
+        const btn = e.target.closest("[data-pooltag]");
+        if (btn) toggleModalKeyword(btn.dataset.pooltag);
       });
 
       // Cantidad de colores (1, 2 o 3)
@@ -3518,11 +3731,37 @@
         document.getElementById(id).addEventListener("input", updateLiveBoxPreview);
       });
 
-      document.querySelectorAll(".text-color-btn").forEach(btn => {
+      // Texto de la tapa
+      buildTextControls();
+      document.getElementById("textColorSwatches").addEventListener("click", e => {
+        const btn = e.target.closest("[data-textcolor]");
+        if (!btn) return;
+        currentModalTextColor = btn.dataset.textcolor;
+        updateLiveBoxPreview();
+      });
+      document.getElementById("textColorInput").addEventListener("input", e => {
+        currentModalTextColor = e.target.value;
+        updateLiveBoxPreview();
+      });
+      document.getElementById("textFontSelect").addEventListener("change", e => {
+        currentModalTextFont = e.target.value;
+        updateLiveBoxPreview();
+      });
+      document.getElementById("textEffectChips").addEventListener("click", e => {
+        const btn = e.target.closest("[data-texteffect]");
+        if (!btn) return;
+        currentModalTextEffect = btn.dataset.texteffect;
+        updateLiveBoxPreview();
+      });
+      document.querySelectorAll(".text-size-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-          currentModalTextColor = btn.dataset.textcolor;
+          currentModalTextSize = btn.dataset.textsize;
           updateLiveBoxPreview();
         });
+      });
+      document.getElementById("textUpperToggle").addEventListener("change", e => {
+        currentModalTextUpper = e.target.checked;
+        updateLiveBoxPreview();
       });
 
       document.getElementById("cdForm").addEventListener("submit", e => {
@@ -3551,7 +3790,7 @@
             rotation: Number(document.getElementById("boxPatternRotation").value),
             randomness: Number(document.getElementById("boxPatternRandom").value),
             seed: currentModalSeed,
-            textColor: currentModalTextColor
+            ...getModalTextDesign()
           }
         });
         if (!cdData) {
