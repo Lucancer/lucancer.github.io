@@ -454,7 +454,7 @@
         "randomness": 0,
         "seed": 956458,
         "textColor": "#4ade80",
-        "textFont": "mono",
+        "textFont": "terminal",
         "textEffect": "none",
         "textSize": "md",
         "textUpper": false
